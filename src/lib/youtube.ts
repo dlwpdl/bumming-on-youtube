@@ -56,18 +56,43 @@ export function filterByDuration(durationSeconds: number, filter: string): boole
 
 export async function searchVideos(filters: SearchFilters): Promise<VideoData[]> {
   try {
-    const searchResponse = await youtube.search.list({
+    console.log('검색 시작:', filters);
+    
+    if (!process.env.YOUTUBE_API_KEY) {
+      console.error('YouTube API 키가 설정되지 않았습니다');
+      throw new Error('YouTube API 키가 필요합니다');
+    }
+
+    const searchParams: any = {
       part: ['snippet'],
       q: filters.query,
       type: ['video'],
-      maxResults: filters.maxResults,
+      maxResults: Math.min(filters.maxResults, 50),
       order: 'relevance',
-      videoDuration: filters.videoDuration === 'any' ? undefined : filters.videoDuration,
-      videoCategoryId: filters.categoryId,
-    });
+    };
 
-    const videoIds = searchResponse.data.items?.map(item => item.id?.videoId).filter((id): id is string => Boolean(id)) || [];
+    // Duration 필터는 YouTube API가 지원하지 않으므로 제거
+    if (filters.categoryId) {
+      searchParams.videoCategoryId = filters.categoryId;
+    }
+
+    console.log('검색 파라미터:', searchParams);
+
+    const searchResponse = await youtube.search.list(searchParams);
     
+    console.log('검색 응답:', searchResponse.data);
+
+    if (!searchResponse.data.items || searchResponse.data.items.length === 0) {
+      console.log('검색 결과가 없습니다');
+      return [];
+    }
+
+    const videoIds = searchResponse.data.items
+      .map(item => item.id?.videoId)
+      .filter((id): id is string => Boolean(id));
+    
+    console.log('비디오 IDs:', videoIds);
+
     if (videoIds.length === 0) return [];
 
     const [videoDetails, channelDetails] = await Promise.all([
@@ -75,8 +100,11 @@ export async function searchVideos(filters: SearchFilters): Promise<VideoData[]>
         part: ['snippet', 'statistics', 'contentDetails'],
         id: videoIds,
       }),
-      getChannelDetails(searchResponse.data.items?.map(item => item.snippet?.channelId).filter((id): id is string => Boolean(id)) || [])
+      getChannelDetails(searchResponse.data.items.map(item => item.snippet?.channelId).filter((id): id is string => Boolean(id)))
     ]);
+
+    console.log('비디오 상세:', videoDetails.data);
+    console.log('채널 상세:', channelDetails);
 
     const channelMap = new Map(channelDetails.map(channel => [channel.id, channel]));
 
@@ -88,6 +116,7 @@ export async function searchVideos(filters: SearchFilters): Promise<VideoData[]>
       const subscriberCount = parseInt(channelData?.statistics?.subscriberCount || '0');
       const durationSeconds = parseDuration(video.contentDetails?.duration || '');
       
+      // 클라이언트 사이드에서 필터링
       if (filters.maxSubscribers && subscriberCount > filters.maxSubscribers) continue;
       if (filters.minViews && viewCount < filters.minViews) continue;
       if (filters.videoDuration !== 'any' && !filterByDuration(durationSeconds, filters.videoDuration)) continue;
@@ -107,9 +136,10 @@ export async function searchVideos(filters: SearchFilters): Promise<VideoData[]>
       });
     }
 
+    console.log('최종 결과:', videos);
     return videos;
   } catch (error) {
-    console.error('YouTube API 오류:', error);
+    console.error('YouTube API 상세 오류:', error);
     throw error;
   }
 }
