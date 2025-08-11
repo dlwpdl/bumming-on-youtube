@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Play, Youtube, Settings, Key, CheckCircle, XCircle, X, TrendingUp, Clock, Eye, Users, Filter, Sparkles, ArrowUpDown, ChevronDown, Zap, ChevronLeft, ChevronRight, Loader, Video, UserCheck, BarChart3, ExternalLink, Heart, Star, Bookmark } from 'lucide-react';
+import { Search, Play, Youtube, Settings, Key, CheckCircle, XCircle, X, TrendingUp, Clock, Eye, Users, Filter, Sparkles, ArrowUpDown, ChevronDown, Zap, ChevronLeft, ChevronRight, Loader, Video, UserCheck, BarChart3, ExternalLink, Heart, Star, Bookmark, ArrowUp } from 'lucide-react';
 import { VideoData } from '@/lib/youtube';
 
 type SortField = 'performanceScore' | 'viewCount' | 'subscriberCount' | 'title';
@@ -33,7 +33,11 @@ interface ChannelAnalysisData {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('videos');
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  // 탭별 검색 상태 관리
+  const [videoSearchQuery, setVideoSearchQuery] = useState('');
+  const [channelSearchQuery, setChannelSearchQuery] = useState('');
+  
   const [videos, setVideos] = useState<VideoData[]>([]);
   const [channels, setChannels] = useState<ChannelData[]>([]);
   const [sortedVideos, setSortedVideos] = useState<VideoData[]>([]);
@@ -45,6 +49,7 @@ export default function Home() {
   const [favoriteVideos, setFavoriteVideos] = useState<FavoriteVideo[]>([]);
   const [loadingChannelAnalysis, setLoadingChannelAnalysis] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [error, setError] = useState('');
   const [sortField, setSortField] = useState<SortField>('performanceScore');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -72,6 +77,10 @@ export default function Home() {
   const [apiKeyStatus, setApiKeyStatus] = useState<'none' | 'valid' | 'invalid'>('none');
   const [testingApiKey, setTestingApiKey] = useState(false);
 
+  // 현재 활성 탭에 따른 검색어 반환
+  const currentSearchQuery = activeTab === 'channels' ? channelSearchQuery : videoSearchQuery;
+  const setCurrentSearchQuery = activeTab === 'channels' ? setChannelSearchQuery : setVideoSearchQuery;
+
   // 로컬 스토리지에서 API 키 및 즐겨찾기 로드
   useEffect(() => {
     const savedApiKey = localStorage.getItem('youtube-api-key');
@@ -89,6 +98,24 @@ export default function Home() {
       }
     }
   }, []);
+
+  // 스크롤 투 탑 버튼 표시 여부 관리
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollToTop(window.scrollY > 400);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 상단으로 스크롤하는 함수
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   // 즐겨찾기 관련 함수들
   const addToFavorites = (video: VideoData) => {
@@ -266,16 +293,21 @@ export default function Home() {
     }
   }, [filters.videoDuration, filters.maxSubscribers, filters.minViews, filters.categoryId, filters.maxResults]);
 
-  // 탭 변경 시 검색 결과 클리어
+  // 탭 변경 시 UI 상태 초기화 (검색어는 유지)
   useEffect(() => {
-    setVideos([]);
-    setChannels([]);
-    setSearchQuery('');
+    // 검색 결과는 탭별로 유지하되, 페이지네이션은 초기화
     setCurrentPage(1);
     setNextPageToken(undefined);
     setPrevPageTokens([]);
     setTotalResults(0);
     setError('');
+    
+    // 선택된 채널 초기화 (분석 탭이 아닌 경우)
+    if (activeTab !== 'analysis') {
+      setSelectedChannelId(null);
+      setSelectedChannelData(null);
+      setChannelVideos([]);
+    }
   }, [activeTab]);
 
   const handleSort = (field: SortField) => {
@@ -288,7 +320,7 @@ export default function Home() {
   };
 
   const handleSearch = async (pageToken?: string) => {
-    if (!searchQuery.trim()) return;
+    if (!currentSearchQuery.trim()) return;
     if (!apiKey) {
       setError('YouTube API 키가 설정되지 않았습니다. 설정 버튼을 눌러 API 키를 입력해주세요.');
       return;
@@ -329,7 +361,7 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query: searchQuery,
+          query: currentSearchQuery,
           apiKey: apiKey,
           pageToken: pageToken,
           ...(activeTab === 'videos' ? {
@@ -662,8 +694,8 @@ export default function Home() {
                           ? "어떤 채널을 찾고 계신가요?"
                           : "채널을 선택해주세요"
                       }
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      value={currentSearchQuery}
+                      onChange={(e) => setCurrentSearchQuery(e.target.value)}
                       className="flex-1 px-3 sm:px-4 py-3 sm:py-4 text-base sm:text-lg bg-transparent focus:outline-none text-gray-900 placeholder-gray-500"
                       onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                       disabled={activeTab === 'analysis'}
@@ -671,7 +703,7 @@ export default function Home() {
                   </div>
                   <button
                     onClick={() => handleSearch()}
-                    disabled={loading || !searchQuery.trim() || !apiKey}
+                    disabled={loading || !currentSearchQuery.trim() || !apiKey}
                     className="mx-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl sm:rounded-2xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
                   >
                     {loading ? (
@@ -1230,7 +1262,7 @@ export default function Home() {
         {!loading && !error && 
          ((activeTab === 'videos' && videos.length === 0) || 
           (activeTab === 'channels' && channels.length === 0)) && 
-         searchQuery && (
+         currentSearchQuery && (
           <div className="text-center py-12 sm:py-20">
             <div className="max-w-md mx-auto px-4">
               <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg">
@@ -1776,6 +1808,17 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* 스크롤 투 탑 버튼 */}
+      {showScrollToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group transform hover:scale-110"
+          aria-label="맨 위로 스크롤"
+        >
+          <ArrowUp className="w-5 h-5 group-hover:transform group-hover:-translate-y-0.5 transition-transform duration-200" />
+        </button>
+      )}
     </div>
   );
 }

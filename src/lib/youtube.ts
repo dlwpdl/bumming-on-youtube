@@ -75,6 +75,85 @@ export function calculatePerformanceScore(viewCount: number, subscriberCount: nu
   return (viewCount / subscriberCount) * 100;
 }
 
+export function extractChannelIdFromUrl(url: string): string | null {
+  try {
+    const cleanUrl = decodeURIComponent(url);
+    
+    // @handle 형태 (예: youtube.com/@channelname)
+    const handleMatch = cleanUrl.match(/youtube\.com\/@([^/?&]+)/);
+    if (handleMatch) {
+      return `@${handleMatch[1]}`;
+    }
+    
+    // /channel/ID 형태 (예: youtube.com/channel/UC123456)
+    const channelMatch = cleanUrl.match(/youtube\.com\/channel\/([^/?&]+)/);
+    if (channelMatch) {
+      return channelMatch[1];
+    }
+    
+    // /c/channelname 형태 (예: youtube.com/c/channelname)
+    const customMatch = cleanUrl.match(/youtube\.com\/c\/([^/?&]+)/);
+    if (customMatch) {
+      return customMatch[1];
+    }
+    
+    // /user/username 형태 (예: youtube.com/user/username)
+    const userMatch = cleanUrl.match(/youtube\.com\/user\/([^/?&]+)/);
+    if (userMatch) {
+      return userMatch[1];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('URL 파싱 오류:', error);
+    return null;
+  }
+}
+
+export async function getChannelIdFromHandle(handle: string, apiKey: string): Promise<string | null> {
+  try {
+    const youtube = google.youtube({
+      version: 'v3',
+      auth: apiKey,
+    });
+    
+    // @ 기호가 있으면 제거
+    const cleanHandle = handle.startsWith('@') ? handle.slice(1) : handle;
+    
+    const searchResponse = await youtube.search.list({
+      part: ['snippet'],
+      q: cleanHandle,
+      type: ['channel'],
+      maxResults: 5,
+    });
+    
+    if (searchResponse.data.items && searchResponse.data.items.length > 0) {
+      for (const item of searchResponse.data.items) {
+        const channelId = item.snippet?.channelId;
+        if (channelId) {
+          // 채널 상세 정보를 가져와서 정확한 채널인지 확인
+          const channelResponse = await youtube.channels.list({
+            part: ['snippet'],
+            id: [channelId],
+          });
+          
+          const channel = channelResponse.data.items?.[0];
+          if (channel && channel.snippet?.customUrl?.toLowerCase().includes(cleanHandle.toLowerCase())) {
+            return channelId;
+          }
+        }
+      }
+      // 정확한 매치가 없으면 첫 번째 결과 반환
+      return searchResponse.data.items[0].snippet?.channelId || null;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Handle에서 채널 ID 가져오기 오류:', error);
+    return null;
+  }
+}
+
 export function filterByDuration(durationSeconds: number, filter: string): boolean {
   switch (filter) {
     case 'short': return durationSeconds <= 60;
@@ -225,6 +304,77 @@ export async function searchChannels(filters: ChannelSearchFilters, apiKey: stri
       version: 'v3',
       auth: apiKey,
     });
+
+    // URL인지 확인하고 채널 ID 추출
+    const channelIdFromUrl = extractChannelIdFromUrl(filters.query);
+    
+    if (channelIdFromUrl) {
+      console.log('URL에서 추출된 채널 정보:', channelIdFromUrl);
+      
+      let finalChannelId = channelIdFromUrl;
+      
+      // @handle 형태인 경우 실제 채널 ID로 변환
+      if (channelIdFromUrl.startsWith('@')) {
+        const resolvedId = await getChannelIdFromHandle(channelIdFromUrl, apiKey);
+        if (resolvedId) {
+          finalChannelId = resolvedId;
+        }
+      }
+      
+      try {
+        // 직접 채널 정보 가져오기
+        const channelResponse = await youtube.channels.list({
+          part: ['snippet', 'statistics', 'brandingSettings'],
+          id: [finalChannelId],
+        });
+        
+        if (channelResponse.data.items && channelResponse.data.items.length > 0) {
+          const channel = channelResponse.data.items[0];
+          const subscriberCount = parseInt(channel.statistics?.subscriberCount || '0');
+          const viewCount = parseInt(channel.statistics?.viewCount || '0');
+          const videoCount = parseInt(channel.statistics?.videoCount || '0');
+          
+          // 필터 조건 확인
+          if (filters.minSubscribers && subscriberCount < filters.minSubscribers) {
+            return {
+              channels: [],
+              nextPageToken: undefined,
+              totalResults: 0
+            };
+          }
+          if (filters.maxSubscribers && subscriberCount > filters.maxSubscribers) {
+            return {
+              channels: [],
+              nextPageToken: undefined,
+              totalResults: 0
+            };
+          }
+          
+          const engagementRate = videoCount > 0 ? (viewCount / subscriberCount / videoCount) * 100 : 0;
+          
+          return {
+            channels: [{
+              id: channel.id || '',
+              title: channel.snippet?.title || '',
+              description: channel.snippet?.description || '',
+              subscriberCount,
+              viewCount,
+              videoCount,
+              thumbnail: channel.snippet?.thumbnails?.medium?.url || '',
+              publishedAt: channel.snippet?.publishedAt || '',
+              country: channel.snippet?.country || undefined,
+              customUrl: channel.snippet?.customUrl || undefined,
+              engagementRate,
+            }],
+            nextPageToken: undefined,
+            totalResults: 1
+          };
+        }
+      } catch (directError) {
+        console.log('직접 채널 조회 실패, 검색으로 대체:', directError);
+        // 직접 조회 실패 시 일반 검색으로 대체
+      }
+    }
 
     const searchParams: any = {
       part: ['snippet'],
