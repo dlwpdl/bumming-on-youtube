@@ -1,8 +1,8 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'YouTube Filter App',
-  description: 'Advanced YouTube video filtering and search',
+  title: 'Bumming on Youtube',
+  description: '고성능 유튜브 영상 발굴 도구',
 }
 
 export default function RootLayout({

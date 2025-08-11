@@ -29,12 +29,16 @@
   },
   "homepage": "https://github.com/dlwpdl/bumming-on-youtube#readme",
   "devDependencies": {
+    "@tailwindcss/line-clamp": "^0.4.4",
+    "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^24.2.1",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9.33.0",
     "eslint-config-next": "^15.4.6",
-    "tailwindcss": "^4.1.11",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.9.2"
   }
 }

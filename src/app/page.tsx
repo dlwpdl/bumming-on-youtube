@@ -183,9 +183,12 @@ export default function Home() {
   };
 
   const getPerformanceColor = (score: number) => {
-    if (score > 10) return 'text-emerald-600 bg-emerald-50';
-    if (score > 1) return 'text-amber-600 bg-amber-50';
-    return 'text-red-600 bg-red-50';
+    if (score >= 50) return { bg: 'from-emerald-500 to-teal-600', text: 'text-emerald-700', icon: '🔥' };
+    if (score >= 20) return { bg: 'from-green-500 to-emerald-600', text: 'text-green-700', icon: '✨' };
+    if (score >= 10) return { bg: 'from-blue-500 to-blue-600', text: 'text-blue-700', icon: '👍' };
+    if (score >= 5) return { bg: 'from-yellow-500 to-amber-500', text: 'text-yellow-700', icon: '⚡' };
+    if (score >= 1) return { bg: 'from-orange-500 to-orange-600', text: 'text-orange-700', icon: '📊' };
+    return { bg: 'from-gray-400 to-gray-500', text: 'text-gray-700', icon: '📉' };
   };
 
   const getPerformanceLabel = (score: number) => {
@@ -247,7 +250,7 @@ export default function Home() {
         <div className="text-center mb-12">
           <div className="max-w-4xl mx-auto">
             <div className="mb-8">
-              <h2 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-4">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">
                 성과 높은 영상 찾기
               </h2>
               <p className="text-xl text-gray-600 font-medium">AI 기반 성과 분석으로 �숨겨진 보석같은 영상을 발굴하세요</p>
@@ -264,14 +267,14 @@ export default function Home() {
                       placeholder="어떤 영상을 찾고 계신가요?"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="flex-1 px-4 py-6 text-xl bg-transparent focus:outline-none text-gray-900 placeholder-gray-500"
+                      className="flex-1 px-4 py-4 text-lg bg-transparent focus:outline-none text-gray-900 placeholder-gray-500"
                       onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                     />
                   </div>
                   <button
                     onClick={handleSearch}
                     disabled={loading || !searchQuery.trim() || !apiKey}
-                    className="mr-2 px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                    className="mr-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-base shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
                   >
                     {loading ? (
                       <div className="flex items-center gap-2">
@@ -297,7 +300,7 @@ export default function Home() {
             <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
               <Filter className="w-5 h-5 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900">필터 옵션</h3>
+            <h3 className="text-lg font-bold text-gray-900">필터 옵션</h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -405,7 +408,7 @@ export default function Home() {
                     <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">검색 결과</h3>
+                    <h3 className="text-xl font-bold text-gray-900">검색 결과</h3>
                     <p className="text-gray-600 font-medium">{sortedVideos.length}개의 영상을 찾았습니다</p>
                   </div>
                 </div>
@@ -472,7 +475,7 @@ export default function Home() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1 min-w-0 mr-4">
-                            <h4 className="text-xl font-bold text-gray-900 line-clamp-2 leading-tight mb-2 group-hover:text-red-600 transition-colors">
+                            <h4 className="text-lg font-bold text-gray-900 leading-tight mb-2 group-hover:text-red-600 transition-colors line-clamp-2">
                               {video.title}
                             </h4>
                             <p className="text-gray-600 font-medium mb-3">{video.channelTitle}</p>
@@ -494,7 +497,7 @@ export default function Home() {
                               <Eye className="w-4 h-4 text-blue-600" />
                               <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">조회수</span>
                             </div>
-                            <p className="text-xl font-bold text-blue-900">{formatNumber(video.viewCount)}</p>
+                            <p className="text-lg font-bold text-blue-900">{formatNumber(video.viewCount)}</p>
                           </div>
                           
                           <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border border-purple-200/50">
@@ -502,44 +505,20 @@ export default function Home() {
                               <Users className="w-4 h-4 text-purple-600" />
                               <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">구독자</span>
                             </div>
-                            <p className="text-xl font-bold text-purple-900">{formatNumber(video.subscriberCount)}</p>
+                            <p className="text-lg font-bold text-purple-900">{formatNumber(video.subscriberCount)}</p>
                           </div>
                           
-                          <div className={`bg-gradient-to-br rounded-2xl p-4 border ${
-                            video.performanceScore > 10 
-                              ? 'from-emerald-50 to-emerald-100 border-emerald-200/50' 
-                              : video.performanceScore > 1
-                              ? 'from-amber-50 to-amber-100 border-amber-200/50'
-                              : 'from-red-50 to-red-100 border-red-200/50'
-                          }`}>
+                          <div className={`bg-gradient-to-br ${getPerformanceColor(video.performanceScore).bg} rounded-2xl p-4 text-white shadow-lg`}>
                             <div className="flex items-center gap-2 mb-1">
-                              <Zap className={`w-4 h-4 ${
-                                video.performanceScore > 10 
-                                  ? 'text-emerald-600' 
-                                  : video.performanceScore > 1
-                                  ? 'text-amber-600'
-                                  : 'text-red-600'
-                              }`} />
-                              <span className={`text-xs font-semibold uppercase tracking-wide ${
-                                video.performanceScore > 10 
-                                  ? 'text-emerald-700' 
-                                  : video.performanceScore > 1
-                                  ? 'text-amber-700'
-                                  : 'text-red-700'
-                              }`}>성과율</span>
+                              <Zap className="w-4 h-4 text-white" />
+                              <span className="text-xs font-semibold text-white/90 uppercase tracking-wide">성과율</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <p className={`text-xl font-bold ${
-                                video.performanceScore > 10 
-                                  ? 'text-emerald-900' 
-                                  : video.performanceScore > 1
-                                  ? 'text-amber-900'
-                                  : 'text-red-900'
-                              }`}>
+                              <p className="text-lg font-bold text-white">
                                 {video.performanceScore.toFixed(1)}%
                               </p>
-                              <span className="text-sm">
-                                {video.performanceScore > 10 ? '🔥' : video.performanceScore > 1 ? '👍' : '📉'}
+                              <span className="text-lg">
+                                {getPerformanceColor(video.performanceScore).icon}
                               </span>
                             </div>
                           </div>
