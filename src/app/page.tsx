@@ -117,6 +117,19 @@ export default function Home() {
     });
   };
 
+  // 선택된 채널 초기화 함수
+  const clearSelectedChannel = () => {
+    setSelectedChannelId(null);
+    setSelectedChannelData(null);
+    setChannelVideos([]);
+    setSortedChannelVideos([]);
+    setCurrentPage(1);
+    setNextPageToken(undefined);
+    setPrevPageTokens([]);
+    setTotalResults(0);
+    setError('');
+  };
+
   // 즐겨찾기 관련 함수들
   const addToFavorites = (video: VideoData) => {
     const favoriteVideo: FavoriteVideo = {
@@ -293,7 +306,7 @@ export default function Home() {
     }
   }, [filters.videoDuration, filters.maxSubscribers, filters.minViews, filters.categoryId, filters.maxResults]);
 
-  // 탭 변경 시 UI 상태 초기화 (검색어는 유지)
+  // 탭 변경 시 UI 상태 초기화 (검색어와 채널 분석 정보는 유지)
   useEffect(() => {
     // 검색 결과는 탭별로 유지하되, 페이지네이션은 초기화
     setCurrentPage(1);
@@ -302,12 +315,8 @@ export default function Home() {
     setTotalResults(0);
     setError('');
     
-    // 선택된 채널 초기화 (분석 탭이 아닌 경우)
-    if (activeTab !== 'analysis') {
-      setSelectedChannelId(null);
-      setSelectedChannelData(null);
-      setChannelVideos([]);
-    }
+    // 선택된 채널 정보는 항상 유지 (분석 탭에서 사용)
+    // setSelectedChannelId, setSelectedChannelData, setChannelVideos는 유지
   }, [activeTab]);
 
   const handleSort = (field: SortField) => {
@@ -1159,9 +1168,12 @@ export default function Home() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => {
-                                setSelectedChannelId(channel.id);
+                                // 이미 선택된 채널과 다른 경우에만 새로 로드
+                                if (selectedChannelId !== channel.id) {
+                                  setSelectedChannelId(channel.id);
+                                  loadChannelAnalysis(channel.id);
+                                }
                                 setActiveTab('analysis');
-                                loadChannelAnalysis(channel.id);
                               }}
                               className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-xs sm:text-sm font-semibold"
                             >
@@ -1421,14 +1433,23 @@ export default function Home() {
             {selectedChannelId && selectedChannelData ? (
               <div className="space-y-8">
                 {/* 채널 정보 헤더 */}
-                <div className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200/50 p-6 sm:p-8">
+                <div className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200/50 p-6 sm:p-8 relative">
+                  {/* 채널 초기화 버튼 */}
+                  <button
+                    onClick={clearSelectedChannel}
+                    className="absolute top-4 right-4 w-10 h-10 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-red-100 hover:to-red-200 text-gray-600 hover:text-red-600 rounded-full flex items-center justify-center transition-all duration-200 group shadow-md hover:shadow-lg"
+                    aria-label="채널 선택 취소"
+                  >
+                    <X className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                  </button>
+                  
                   <div className="flex flex-col sm:flex-row items-center gap-6">
                     <img
                       src={selectedChannelData.thumbnail}
                       alt={selectedChannelData.title}
                       className="w-20 h-20 sm:w-32 sm:h-32 object-cover rounded-full shadow-lg"
                     />
-                    <div className="flex-1 text-center sm:text-left">
+                    <div className="flex-1 text-center sm:text-left pr-12">
                       <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{selectedChannelData.title}</h2>
                       <p className="text-gray-600 mb-4 line-clamp-2">{selectedChannelData.description || '설명이 없습니다.'}</p>
                       <div className="grid grid-cols-3 gap-4">
