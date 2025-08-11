@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchVideos, SearchFilters } from '@/lib/youtube';
+import { searchChannels, ChannelSearchFilters } from '@/lib/youtube';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,12 +14,11 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const filters: SearchFilters = {
+    const filters: ChannelSearchFilters = {
       query: body.query || '',
-      videoDuration: body.videoDuration || 'any',
+      minSubscribers: body.minSubscribers ? parseInt(body.minSubscribers) : undefined,
       maxSubscribers: body.maxSubscribers ? parseInt(body.maxSubscribers) : undefined,
-      minViews: body.minViews ? parseInt(body.minViews) : undefined,
-      categoryId: body.categoryId || undefined,
+      country: body.country || undefined,
       maxResults: parseInt(body.maxResults) || 50,
       pageToken: body.pageToken || undefined,
     };
@@ -31,13 +30,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await searchVideos(filters, apiKey);
+    const result = await searchChannels(filters, apiKey);
     
     return NextResponse.json(result);
   } catch (error) {
-    console.error('검색 API 오류:', error);
+    console.error('채널 검색 API 오류:', error);
     return NextResponse.json(
-      { error: '검색 중 오류가 발생했습니다.' },
+      { error: '채널 검색 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }

@@ -14,6 +14,26 @@ export interface VideoData {
   performanceScore: number;
 }
 
+export interface ChannelData {
+  id: string;
+  title: string;
+  description: string;
+  subscriberCount: number;
+  viewCount: number;
+  videoCount: number;
+  thumbnail: string;
+  publishedAt: string;
+  country?: string;
+  customUrl?: string;
+  engagementRate?: number;
+}
+
+export interface ChannelSearchResult {
+  channels: ChannelData[];
+  nextPageToken?: string;
+  totalResults?: number;
+}
+
 export interface SearchFilters {
   query: string;
   videoDuration: 'any' | 'short' | 'medium' | 'long' | 'ultra_long';
@@ -21,6 +41,22 @@ export interface SearchFilters {
   minViews?: number;
   categoryId?: string;
   maxResults: number;
+  pageToken?: string;
+}
+
+export interface ChannelSearchFilters {
+  query: string;
+  minSubscribers?: number;
+  maxSubscribers?: number;
+  country?: string;
+  maxResults: number;
+  pageToken?: string;
+}
+
+export interface SearchResult {
+  videos: VideoData[];
+  nextPageToken?: string;
+  totalResults?: number;
 }
 
 export function parseDuration(duration: string): number {
@@ -49,7 +85,7 @@ export function filterByDuration(durationSeconds: number, filter: string): boole
   }
 }
 
-export async function searchVideos(filters: SearchFilters, apiKey: string): Promise<VideoData[]> {
+export async function searchVideos(filters: SearchFilters, apiKey: string): Promise<SearchResult> {
   try {
     console.log('검색 시작:', filters);
     
@@ -70,6 +106,10 @@ export async function searchVideos(filters: SearchFilters, apiKey: string): Prom
       maxResults: Math.min(filters.maxResults, 50),
       order: 'relevance',
     };
+    
+    if (filters.pageToken) {
+      searchParams.pageToken = filters.pageToken;
+    }
 
     // Duration 필터는 YouTube API가 지원하지 않으므로 제거
     if (filters.categoryId) {
@@ -84,7 +124,11 @@ export async function searchVideos(filters: SearchFilters, apiKey: string): Prom
 
     if (!searchResponse.data.items || searchResponse.data.items.length === 0) {
       console.log('검색 결과가 없습니다');
-      return [];
+      return {
+        videos: [],
+        nextPageToken: undefined,
+        totalResults: 0
+      };
     }
 
     const videoIds = searchResponse.data.items
@@ -93,7 +137,11 @@ export async function searchVideos(filters: SearchFilters, apiKey: string): Prom
     
     console.log('비디오 IDs:', videoIds);
 
-    if (videoIds.length === 0) return [];
+    if (videoIds.length === 0) return {
+      videos: [],
+      nextPageToken: searchResponse.data.nextPageToken || undefined,
+      totalResults: searchResponse.data.pageInfo?.totalResults || 0
+    };
 
     const [videoDetails, channelDetails] = await Promise.all([
       youtube.videos.list({
@@ -137,7 +185,11 @@ export async function searchVideos(filters: SearchFilters, apiKey: string): Prom
     }
 
     console.log('최종 결과:', videos);
-    return videos;
+    return {
+      videos,
+      nextPageToken: searchResponse.data.nextPageToken || undefined,
+      totalResults: searchResponse.data.pageInfo?.totalResults || 0
+    };
   } catch (error) {
     console.error('YouTube API 상세 오류:', error);
     throw error;
@@ -158,4 +210,109 @@ async function getChannelDetails(channelIds: string[], apiKey: string) {
   });
 
   return channelResponse.data.items || [];
+}
+
+export async function searchChannels(filters: ChannelSearchFilters, apiKey: string): Promise<ChannelSearchResult> {
+  try {
+    console.log('채널 검색 시작:', filters);
+    
+    if (!apiKey) {
+      console.error('YouTube API 키가 설정되지 않았습니다');
+      throw new Error('YouTube API 키가 필요합니다');
+    }
+
+    const youtube = google.youtube({
+      version: 'v3',
+      auth: apiKey,
+    });
+
+    const searchParams: any = {
+      part: ['snippet'],
+      q: filters.query,
+      type: ['channel'],
+      maxResults: Math.min(filters.maxResults, 50),
+      order: 'relevance',
+    };
+    
+    if (filters.pageToken) {
+      searchParams.pageToken = filters.pageToken;
+    }
+
+    if (filters.country) {
+      searchParams.regionCode = filters.country;
+    }
+
+    console.log('채널 검색 파라미터:', searchParams);
+
+    const searchResponse = await youtube.search.list(searchParams);
+    
+    console.log('채널 검색 응답:', searchResponse.data);
+
+    if (!searchResponse.data.items || searchResponse.data.items.length === 0) {
+      console.log('채널 검색 결과가 없습니다');
+      return {
+        channels: [],
+        nextPageToken: undefined,
+        totalResults: 0
+      };
+    }
+
+    const channelIds = searchResponse.data.items
+      .map(item => item.id?.channelId)
+      .filter((id): id is string => Boolean(id));
+    
+    console.log('채널 IDs:', channelIds);
+
+    if (channelIds.length === 0) return {
+      channels: [],
+      nextPageToken: searchResponse.data.nextPageToken || undefined,
+      totalResults: searchResponse.data.pageInfo?.totalResults || 0
+    };
+
+    const channelDetails = await youtube.channels.list({
+      part: ['snippet', 'statistics', 'brandingSettings'],
+      id: channelIds,
+    });
+
+    console.log('채널 상세:', channelDetails.data);
+
+    const channels: ChannelData[] = [];
+    
+    for (const channel of channelDetails.data.items || []) {
+      const subscriberCount = parseInt(channel.statistics?.subscriberCount || '0');
+      const viewCount = parseInt(channel.statistics?.viewCount || '0');
+      const videoCount = parseInt(channel.statistics?.videoCount || '0');
+      
+      // 클라이언트 사이드에서 필터링
+      if (filters.minSubscribers && subscriberCount < filters.minSubscribers) continue;
+      if (filters.maxSubscribers && subscriberCount > filters.maxSubscribers) continue;
+
+      // 참여율 계산 (대략적인 계산)
+      const engagementRate = videoCount > 0 ? (viewCount / subscriberCount / videoCount) * 100 : 0;
+
+      channels.push({
+        id: channel.id || '',
+        title: channel.snippet?.title || '',
+        description: channel.snippet?.description || '',
+        subscriberCount,
+        viewCount,
+        videoCount,
+        thumbnail: channel.snippet?.thumbnails?.medium?.url || '',
+        publishedAt: channel.snippet?.publishedAt || '',
+        country: channel.snippet?.country,
+        customUrl: channel.snippet?.customUrl,
+        engagementRate,
+      });
+    }
+
+    console.log('최종 채널 결과:', channels);
+    return {
+      channels,
+      nextPageToken: searchResponse.data.nextPageToken || undefined,
+      totalResults: searchResponse.data.pageInfo?.totalResults || 0
+    };
+  } catch (error) {
+    console.error('YouTube 채널 검색 API 상세 오류:', error);
+    throw error;
+  }
 }
