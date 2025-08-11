@@ -5,6 +5,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    const apiKey = body.apiKey || process.env.YOUTUBE_API_KEY;
+    
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'YouTube API 키가 필요합니다.' },
+        { status: 400 }
+      );
+    }
+    
     const filters: SearchFilters = {
       query: body.query || '',
       videoDuration: body.videoDuration || 'any',
@@ -21,7 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const videos = await searchVideos(filters);
+    const videos = await searchVideos(filters, apiKey);
     
     return NextResponse.json({ videos });
   } catch (error) {

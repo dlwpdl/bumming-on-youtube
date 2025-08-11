@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Play, Youtube, Filter, TrendingUp, Eye, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Play, Youtube, Filter, TrendingUp, Eye, Users, Settings, Key, CheckCircle, XCircle, X } from 'lucide-react';
 import { VideoData } from '@/lib/youtube';
 
 export default function Home() {
@@ -17,8 +17,28 @@ export default function Home() {
     maxResults: '50',
   });
 
+  // API 키 관련 상태
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [tempApiKey, setTempApiKey] = useState('');
+  const [apiKeyStatus, setApiKeyStatus] = useState<'none' | 'valid' | 'invalid'>('none');
+  const [testingApiKey, setTestingApiKey] = useState(false);
+
+  // 로컬 스토리지에서 API 키 로드
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem('youtube-api-key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+      setApiKeyStatus('valid'); // 저장된 키가 있으면 유효하다고 가정
+    }
+  }, []);
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
+    if (!apiKey) {
+      setError('YouTube API 키가 설정되지 않았습니다. 설정 버튼을 눌러 API 키를 입력해주세요.');
+      return;
+    }
     
     setLoading(true);
     setError('');
@@ -32,6 +52,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           query: searchQuery,
+          apiKey: apiKey,
           ...filters,
         }),
       });
@@ -51,6 +72,61 @@ export default function Home() {
       setError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
     }
     setLoading(false);
+  };
+
+  const testApiKey = async () => {
+    if (!tempApiKey.trim()) return;
+    
+    setTestingApiKey(true);
+    try {
+      const response = await fetch('/api/test-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey: tempApiKey.trim(),
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setApiKeyStatus('valid');
+      } else {
+        setApiKeyStatus('invalid');
+        setError(data.error);
+      }
+    } catch (error) {
+      console.error('API 키 테스트 오류:', error);
+      setApiKeyStatus('invalid');
+      setError('API 키 테스트 중 오류가 발생했습니다.');
+    }
+    setTestingApiKey(false);
+  };
+
+  const saveApiKey = () => {
+    if (apiKeyStatus === 'valid' && tempApiKey.trim()) {
+      localStorage.setItem('youtube-api-key', tempApiKey.trim());
+      setApiKey(tempApiKey.trim());
+      setShowApiKeyModal(false);
+      setTempApiKey('');
+      setError('');
+    }
+  };
+
+  const openApiKeyModal = () => {
+    setShowApiKeyModal(true);
+    setTempApiKey(apiKey);
+    setApiKeyStatus(apiKey ? 'valid' : 'none');
+    setError('');
+  };
+
+  const closeApiKeyModal = () => {
+    setShowApiKeyModal(false);
+    setTempApiKey('');
+    setApiKeyStatus('none');
+    setError('');
   };
 
   const formatNumber = (num: number) => {
@@ -87,7 +163,26 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* 헤더 */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 relative">
+          {/* API 키 설정 버튼 */}
+          <div className="absolute top-0 right-0">
+            <button
+              onClick={openApiKeyModal}
+              className={`p-3 rounded-xl shadow-lg transition-all duration-200 hover:scale-105 ${
+                apiKeyStatus === 'valid' 
+                  ? 'bg-green-500 hover:bg-green-600' 
+                  : 'bg-gray-500 hover:bg-gray-600'
+              } text-white`}
+              title={apiKeyStatus === 'valid' ? 'API 키 설정됨' : 'API 키 설정 필요'}
+            >
+              {apiKeyStatus === 'valid' ? (
+                <CheckCircle className="w-6 h-6" />
+              ) : (
+                <Settings className="w-6 h-6" />
+              )}
+            </button>
+          </div>
+
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="p-3 bg-red-500 rounded-xl">
               <Youtube className="w-8 h-8 text-white" />
@@ -97,6 +192,21 @@ export default function Home() {
             </h1>
           </div>
           <p className="text-gray-600 text-lg">원하는 조건으로 유튜브 영상을 찾고 성과를 분석해보세요</p>
+          
+          {/* API 키 상태 표시 */}
+          <div className="mt-4">
+            {apiKeyStatus === 'valid' ? (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full text-sm">
+                <CheckCircle className="w-4 h-4" />
+                API 키 연결됨
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-700 rounded-full text-sm">
+                <XCircle className="w-4 h-4" />
+                API 키 설정 필요
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 검색 및 필터 영역 */}
@@ -116,7 +226,7 @@ export default function Home() {
             </div>
             <button
               onClick={handleSearch}
-              disabled={loading || !searchQuery.trim()}
+              disabled={loading || !searchQuery.trim() || !apiKey}
               className="px-8 py-3.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all duration-200 transform hover:scale-105 text-lg font-medium shadow-lg"
             >
               {loading ? (
@@ -303,6 +413,98 @@ export default function Home() {
             </div>
             <h3 className="text-xl font-semibold text-gray-700 mb-2">검색 결과가 없습니다</h3>
             <p className="text-gray-500">다른 키워드로 검색해보세요</p>
+          </div>
+        )}
+
+        {/* API 키 설정 모달 */}
+        {showApiKeyModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in-0 zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <Key className="w-6 h-6 text-red-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">YouTube API 키 설정</h2>
+                </div>
+                <button
+                  onClick={closeApiKeyModal}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    API 키
+                  </label>
+                  <input
+                    type="password"
+                    value={tempApiKey}
+                    onChange={(e) => setTempApiKey(e.target.value)}
+                    placeholder="YouTube Data API v3 키를 입력하세요"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                  />
+                </div>
+
+                {/* API 키 상태 표시 */}
+                {apiKeyStatus === 'valid' && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 text-green-700 rounded-lg">
+                    <CheckCircle className="w-5 h-5" />
+                    <span className="font-medium">API 키가 유효합니다!</span>
+                  </div>
+                )}
+
+                {apiKeyStatus === 'invalid' && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
+                    <XCircle className="w-5 h-5" />
+                    <span className="font-medium">API 키가 유효하지 않습니다</span>
+                  </div>
+                )}
+
+                {/* API 키 발급 안내 */}
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h3 className="font-medium text-blue-900 mb-2">📝 API 키 발급 방법</h3>
+                  <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                    <li><a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a> 접속</li>
+                    <li>새 프로젝트 생성 또는 기존 프로젝트 선택</li>
+                    <li>YouTube Data API v3 활성화</li>
+                    <li>API 키 생성 후 복사하여 붙여넣기</li>
+                  </ol>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={testApiKey}
+                    disabled={!tempApiKey.trim() || testingApiKey}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
+                  >
+                    {testingApiKey ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                        테스트 중...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-4 h-4" />
+                        테스트
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={saveApiKey}
+                    disabled={apiKeyStatus !== 'valid'}
+                    className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    저장
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

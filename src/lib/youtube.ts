@@ -1,10 +1,5 @@
 import { google } from 'googleapis';
 
-const youtube = google.youtube({
-  version: 'v3',
-  auth: process.env.YOUTUBE_API_KEY,
-});
-
 export interface VideoData {
   id: string;
   title: string;
@@ -54,14 +49,19 @@ export function filterByDuration(durationSeconds: number, filter: string): boole
   }
 }
 
-export async function searchVideos(filters: SearchFilters): Promise<VideoData[]> {
+export async function searchVideos(filters: SearchFilters, apiKey: string): Promise<VideoData[]> {
   try {
     console.log('검색 시작:', filters);
     
-    if (!process.env.YOUTUBE_API_KEY) {
+    if (!apiKey) {
       console.error('YouTube API 키가 설정되지 않았습니다');
       throw new Error('YouTube API 키가 필요합니다');
     }
+
+    const youtube = google.youtube({
+      version: 'v3',
+      auth: apiKey,
+    });
 
     const searchParams: any = {
       part: ['snippet'],
@@ -100,7 +100,7 @@ export async function searchVideos(filters: SearchFilters): Promise<VideoData[]>
         part: ['snippet', 'statistics', 'contentDetails'],
         id: videoIds,
       }),
-      getChannelDetails(searchResponse.data.items.map(item => item.snippet?.channelId).filter((id): id is string => Boolean(id)))
+      getChannelDetails(searchResponse.data.items.map(item => item.snippet?.channelId).filter((id): id is string => Boolean(id)), apiKey)
     ]);
 
     console.log('비디오 상세:', videoDetails.data);
@@ -144,8 +144,13 @@ export async function searchVideos(filters: SearchFilters): Promise<VideoData[]>
   }
 }
 
-async function getChannelDetails(channelIds: string[]) {
+async function getChannelDetails(channelIds: string[], apiKey: string) {
   if (channelIds.length === 0) return [];
+  
+  const youtube = google.youtube({
+    version: 'v3',
+    auth: apiKey,
+  });
   
   const channelResponse = await youtube.channels.list({
     part: ['statistics'],
