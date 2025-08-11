@@ -299,8 +299,8 @@ export async function searchChannels(filters: ChannelSearchFilters, apiKey: stri
         videoCount,
         thumbnail: channel.snippet?.thumbnails?.medium?.url || '',
         publishedAt: channel.snippet?.publishedAt || '',
-        country: channel.snippet?.country,
-        customUrl: channel.snippet?.customUrl,
+        country: channel.snippet?.country || undefined,
+        customUrl: channel.snippet?.customUrl || undefined,
         engagementRate,
       });
     }

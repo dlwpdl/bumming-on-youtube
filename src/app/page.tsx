@@ -670,7 +670,7 @@ export default function Home() {
                     />
                   </div>
                   <button
-                    onClick={handleSearch}
+                    onClick={() => handleSearch()}
                     disabled={loading || !searchQuery.trim() || !apiKey}
                     className="mx-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl sm:rounded-2xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
                   >
@@ -996,7 +996,7 @@ export default function Home() {
               <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-white/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 shadow-lg">
                 <div className="flex items-center gap-4">
                   <button
-                    onClick={handlePrevPage}
+                    onClick={() => handlePrevPage()}
                     disabled={currentPage <= 1 || loadingPage}
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02]"
                   >
@@ -1009,7 +1009,7 @@ export default function Home() {
                   </div>
                   
                   <button
-                    onClick={handleNextPage}
+                    onClick={() => handleNextPage()}
                     disabled={!nextPageToken || loadingPage}
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02]"
                   >
@@ -1186,7 +1186,7 @@ export default function Home() {
               <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-white/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 shadow-lg">
                 <div className="flex items-center gap-4">
                   <button
-                    onClick={handlePrevPage}
+                    onClick={() => handlePrevPage()}
                     disabled={currentPage <= 1 || loadingPage}
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02]"
                   >
@@ -1199,7 +1199,7 @@ export default function Home() {
                   </div>
                   
                   <button
-                    onClick={handleNextPage}
+                    onClick={() => handleNextPage()}
                     disabled={!nextPageToken || loadingPage}
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02]"
                   >
@@ -1569,7 +1569,7 @@ export default function Home() {
                       <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-white/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 shadow-lg">
                         <div className="flex items-center gap-4">
                           <button
-                            onClick={handlePrevPage}
+                            onClick={() => handlePrevPage()}
                             disabled={currentPage <= 1 || loadingPage}
                             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02]"
                           >
