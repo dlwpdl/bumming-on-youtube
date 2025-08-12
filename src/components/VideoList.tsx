@@ -20,14 +20,14 @@ interface VideoListProps {
   toggleFavorite: (video: VideoData) => void;
   downloadingThumbnails: Set<string>;
   copiedUrls: Set<string>;
-  openQualityMenus: Set<string>;
-  loadingDownloadLinks: Set<string>;
-  downloadLinksCache: Map<string, any>;
-  openDownloadMenus: Set<string>;
-  toggleQualityMenu: (id: string) => void;
   downloadThumbnail: (id: string, title: string, quality: any) => void;
   copyVideoUrl: (id: string) => void;
-  toggleDownloadMenu: (id: string) => void;
+  formatNumber: (num: number) => string;
+  formatDuration: (duration: string) => string;
+  formatDate: (dateString: string) => string;
+  getTimeAgo: (dateString: string) => string;
+  getDateColorClass: (dateString: string) => string;
+  getPerformanceColor: (score: number) => { bg: string; text: string; icon: string; };
 }
 
 export default function VideoList({ 
