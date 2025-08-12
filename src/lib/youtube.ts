@@ -42,6 +42,9 @@ export interface SearchFilters {
   categoryId?: string;
   maxResults: number;
   pageToken?: string;
+  publishedAfter?: string;
+  publishedBefore?: string;
+  sortBy?: 'relevance' | 'date' | 'viewCount' | 'rating';
 }
 
 export interface ChannelSearchFilters {
@@ -73,6 +76,14 @@ export function parseDuration(duration: string): number {
 export function calculatePerformanceScore(viewCount: number, subscriberCount: number): number {
   if (subscriberCount === 0) return viewCount / 1000;
   return (viewCount / subscriberCount) * 100;
+}
+
+export function convertToISO(dateString: string): string {
+  if (!dateString) return '';
+  
+  // YYYY-MM-DD 형식을 ISO 8601 형식으로 변환
+  const date = new Date(dateString);
+  return date.toISOString();
 }
 
 export function extractChannelIdFromUrl(url: string): string | null {
@@ -183,14 +194,21 @@ export async function searchVideos(filters: SearchFilters, apiKey: string): Prom
       q: filters.query,
       type: ['video'],
       maxResults: Math.min(filters.maxResults, 50),
-      order: 'relevance',
+      order: filters.sortBy || 'relevance',
     };
     
     if (filters.pageToken) {
       searchParams.pageToken = filters.pageToken;
     }
 
-    // Duration 필터는 YouTube API가 지원하지 않으므로 제거
+    if (filters.publishedAfter) {
+      searchParams.publishedAfter = convertToISO(filters.publishedAfter);
+    }
+
+    if (filters.publishedBefore) {
+      searchParams.publishedBefore = convertToISO(filters.publishedBefore);
+    }
+
     if (filters.categoryId) {
       searchParams.videoCategoryId = filters.categoryId;
     }

@@ -22,6 +22,9 @@ export async function POST(request: NextRequest) {
       categoryId: body.categoryId || undefined,
       maxResults: parseInt(body.maxResults) || 50,
       pageToken: body.pageToken || undefined,
+      publishedAfter: body.publishedAfter || undefined,
+      publishedBefore: body.publishedBefore || undefined,
+      sortBy: body.sortBy || 'relevance',
     };
 
     if (!filters.query) {
