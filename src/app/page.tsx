@@ -17,6 +17,7 @@ import ApiKeyModal from '@/components/ApiKeyModal';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
 import ErrorMessage from '@/components/ErrorMessage';
 import EmptyState from '@/components/EmptyState';
+import KakaoAd from '@/components/KakaoAd';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('videos');
@@ -743,6 +744,13 @@ export default function Home() {
         />
 
         <ScrollToTopButton showScrollToTop={showScrollToTop} scrollToTop={scrollToTop} />
+        
+        <KakaoAd 
+          unit="DAN-XefFN3z1sfjALLYG"
+          width="320"
+          height="100"
+          className="mt-8 mb-4"
+        />
       </div>
     </div>
   );

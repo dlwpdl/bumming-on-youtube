@@ -29,6 +29,11 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
+        <Script
+          async
+          src="//t1.daumcdn.net/kas/static/ba.min.js"
+          strategy="afterInteractive"
+        />
       </head>
       <body suppressHydrationWarning={true}>{children}</body>
     </html>
