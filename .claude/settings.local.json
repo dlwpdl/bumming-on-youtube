@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(set YOUTUBE_DL_SKIP_PYTHON_CHECK=1)",
+      "Bash(cross-env YOUTUBE_DL_SKIP_PYTHON_CHECK=1 npm install @types/googletag)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
