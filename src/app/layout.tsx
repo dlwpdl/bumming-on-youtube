@@ -31,8 +31,9 @@ export default function RootLayout({
         />
         <Script
           async
-          src="//t1.daumcdn.net/kas/static/ba.min.js"
+          src="https://t1.daumcdn.net/kas/static/ba.min.js"
           strategy="afterInteractive"
+          charSet="utf-8"
         />
       </head>
       <body suppressHydrationWarning={true}>{children}</body>

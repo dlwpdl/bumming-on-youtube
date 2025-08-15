@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(set YOUTUBE_DL_SKIP_PYTHON_CHECK=1)",
-      "Bash(cross-env YOUTUBE_DL_SKIP_PYTHON_CHECK=1 npm install @types/googletag)"
+      "Bash(cross-env YOUTUBE_DL_SKIP_PYTHON_CHECK=1 npm install @types/googletag)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []
