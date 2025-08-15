@@ -5,6 +5,9 @@ export const metadata = {
   title: 'Bumming on Youtube',
   description: '고성능 유튜브 영상 발굴 도구',
   robots: 'index, follow',
+  other: {
+    'google-adsense-account': 'ca-pub-7025064694638585',
+  },
   openGraph: {
     title: 'Bumming on Youtube',
     description: '고성능 유튜브 영상 발굴 도구',
