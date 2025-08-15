@@ -4,6 +4,12 @@ import Script from 'next/script'
 export const metadata = {
   title: 'Bumming on Youtube',
   description: '고성능 유튜브 영상 발굴 도구',
+  robots: 'index, follow',
+  openGraph: {
+    title: 'Bumming on Youtube',
+    description: '고성능 유튜브 영상 발굴 도구',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({
