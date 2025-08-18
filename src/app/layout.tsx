@@ -12,7 +12,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <head>
+        <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
+      </head>
+      <body>
+        <ins className="kakao_ad_area" style={{display:'none'}}
+          data-ad-unit="DAN-gganLkOxLt61K1G5"
+          data-ad-width="160"
+          data-ad-height="600">
+        </ins>
+        {children}
+      </body>
     </html>
   )
 }
