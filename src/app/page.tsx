@@ -18,6 +18,7 @@ import ScrollToTopButton from '@/components/ScrollToTopButton';
 import ErrorMessage from '@/components/ErrorMessage';
 import EmptyState from '@/components/EmptyState';
 import KakaoAd from '@/components/KakaoAd';
+import VerticalKakaoAd from '@/components/VerticalKakaoAd';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('videos');
@@ -659,78 +660,95 @@ export default function Home() {
       <Header apiKeyStatus={apiKeyStatus} openApiKeyModal={openApiKeyModal} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
-        <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} selectedChannelId={selectedChannelId} />
+        <div className="flex gap-6">
+          {/* 좌측 광고 영역 */}
+          <div className="hidden lg:block w-44 flex-shrink-0">
+            <VerticalKakaoAd />
+          </div>
+          
+          {/* 우측 메인 컨텐츠 영역 */}
+          <div className="flex-1 min-w-0">
+            <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} selectedChannelId={selectedChannelId} />
 
-        <SearchSection 
-          activeTab={activeTab} 
-          currentSearchQuery={currentSearchQuery} 
-          setCurrentSearchQuery={setCurrentSearchQuery} 
-          handleSearch={() => handleSearch()} 
-          loading={loading} 
-          apiKey={apiKey} 
-        />
+            <SearchSection 
+              activeTab={activeTab} 
+              currentSearchQuery={currentSearchQuery} 
+              setCurrentSearchQuery={setCurrentSearchQuery} 
+              handleSearch={() => handleSearch()} 
+              loading={loading} 
+              apiKey={apiKey} 
+            />
 
-        <FilterSection activeTab={activeTab} filters={filters} setFilters={setFilters} />
+            <FilterSection activeTab={activeTab} filters={filters} setFilters={setFilters} />
 
-        <ErrorMessage error={error} />
+            <ErrorMessage error={error} />
 
-        {activeTab === 'videos' && sortedVideos.length > 0 && (
-          <VideoList 
-            sortedVideos={sortedVideos} 
-            currentPage={currentPage} 
-            totalResults={totalResults} 
-            filters={filters} 
-            sortField={sortField} 
-            sortOrder={sortOrder} 
-            handleSort={handleSort} 
-            nextPageToken={nextPageToken} 
-            handlePrevPage={() => handlePrevPage()} 
-            handleNextPage={() => handleNextPage()} 
-            loadingPage={loadingPage} 
-            {...videoCardProps}
-          />
-        )}
+            {activeTab === 'videos' && sortedVideos.length > 0 && (
+              <VideoList 
+                sortedVideos={sortedVideos} 
+                currentPage={currentPage} 
+                totalResults={totalResults} 
+                filters={filters} 
+                sortField={sortField} 
+                sortOrder={sortOrder} 
+                handleSort={handleSort} 
+                nextPageToken={nextPageToken} 
+                handlePrevPage={() => handlePrevPage()} 
+                handleNextPage={() => handleNextPage()} 
+                loadingPage={loadingPage} 
+                {...videoCardProps}
+              />
+            )}
 
-        {activeTab === 'channels' && sortedChannels.length > 0 && (
-          <ChannelList 
-            sortedChannels={sortedChannels} 
-            currentPage={currentPage} 
-            totalResults={totalResults} 
-            filters={filters} 
-            sortField={sortField} 
-            sortOrder={sortOrder} 
-            handleSort={handleSort} 
-            nextPageToken={nextPageToken} 
-            handlePrevPage={() => handlePrevPage()} 
-            handleNextPage={() => handleNextPage()} 
-            loadingPage={loadingPage} 
-            selectedChannelId={selectedChannelId}
-            setSelectedChannelId={setSelectedChannelId}
-            loadChannelAnalysis={loadChannelAnalysis}
-            setActiveTab={setActiveTab}
-            formatNumber={formatNumber}
-          />
-        )}
+            {activeTab === 'channels' && sortedChannels.length > 0 && (
+              <ChannelList 
+                sortedChannels={sortedChannels} 
+                currentPage={currentPage} 
+                totalResults={totalResults} 
+                filters={filters} 
+                sortField={sortField} 
+                sortOrder={sortOrder} 
+                handleSort={handleSort} 
+                nextPageToken={nextPageToken} 
+                handlePrevPage={() => handlePrevPage()} 
+                handleNextPage={() => handleNextPage()} 
+                loadingPage={loadingPage} 
+                selectedChannelId={selectedChannelId}
+                setSelectedChannelId={setSelectedChannelId}
+                loadChannelAnalysis={loadChannelAnalysis}
+                setActiveTab={setActiveTab}
+                formatNumber={formatNumber}
+              />
+            )}
 
-        {!loading && !error && 
-         ((activeTab === 'videos' && videos.length === 0) || 
-          (activeTab === 'channels' && channels.length === 0)) && 
-         currentSearchQuery && (
-          <EmptyState />
-        )}
+            {!loading && !error && 
+             ((activeTab === 'videos' && videos.length === 0) || 
+              (activeTab === 'channels' && channels.length === 0)) && 
+             currentSearchQuery && (
+              <EmptyState />
+            )}
 
-        {activeTab === 'analysis' && (
-          <ChannelAnalysis 
-            selectedChannelData={selectedChannelData} 
-            channelVideos={sortedChannelVideos} 
-            loadingChannelAnalysis={loadingChannelAnalysis} 
-            {...videoCardProps}
-          />
-        )}
+            {activeTab === 'analysis' && (
+              <ChannelAnalysis 
+                selectedChannelData={selectedChannelData} 
+                channelVideos={sortedChannelVideos} 
+                loadingChannelAnalysis={loadingChannelAnalysis} 
+                {...videoCardProps}
+              />
+            )}
 
-        {activeTab === 'favorites' && (
-          <Favorites favoriteVideos={favoriteVideos} {...videoCardProps} />
-        )}
+            {activeTab === 'favorites' && (
+              <Favorites favoriteVideos={favoriteVideos} {...videoCardProps} />
+            )}
+
+            <KakaoAd 
+              unit="DAN-XefFN3z1sfjALLYG"
+              width="320"
+              height="100"
+              className="mt-8 mb-4"
+            />
+          </div>
+        </div>
 
         <ApiKeyModal 
           showApiKeyModal={showApiKeyModal}
@@ -744,13 +762,6 @@ export default function Home() {
         />
 
         <ScrollToTopButton showScrollToTop={showScrollToTop} scrollToTop={scrollToTop} />
-        
-        <KakaoAd 
-          unit="DAN-XefFN3z1sfjALLYG"
-          width="320"
-          height="100"
-          className="mt-8 mb-4"
-        />
       </div>
     </div>
   );

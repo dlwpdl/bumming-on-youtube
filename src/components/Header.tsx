@@ -1,5 +1,5 @@
 
-import { Youtube, Sparkles, CheckCircle, XCircle, Settings } from 'lucide-react';
+import { Youtube, Sparkles, CheckCircle, XCircle, Settings, FileText } from 'lucide-react';
 
 interface HeaderProps {
   apiKeyStatus: 'none' | 'valid' | 'invalid';
@@ -20,13 +20,29 @@ export default function Header({ apiKeyStatus, openApiKeyModal }: HeaderProps) {
             </div>
           </div>
           <div>
-            <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">유튜브 분석기</h1>
+            <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">Bumming On Youtube</h1>
             <p className="text-xs sm:text-sm text-gray-500 font-medium hidden sm:block">고성능 영상 발굴 도구</p>
           </div>
         </div>
         
-        {/* API 키 상태 */}
+        {/* 스크립트 분석 플랫폼 버튼 & API 키 상태 */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* 스크립트 분석 버튼 */}
+          <button
+            onClick={() => window.open('https://scripting-on-youtube.vercel.app', '_blank')}
+            className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-full transition-all duration-200 hover:shadow-md"
+          >
+            <FileText className="w-4 h-4 text-purple-600" />
+            <span className="text-sm font-medium text-purple-700">Bumming On Youtube (Scripting)</span>
+          </button>
+          
+          {/* 모바일용 스크립트 분석 버튼 */}
+          <button
+            onClick={() => window.open('https://scripting-on-youtube.vercel.app', '_blank')}
+            className="sm:hidden p-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-all duration-200"
+          >
+            <FileText className="w-4 h-4 text-purple-600" />
+          </button>
           {apiKeyStatus === 'valid' ? (
             <div className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full">
               <CheckCircle className="w-4 h-4 text-emerald-600" />
