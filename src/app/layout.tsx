@@ -37,8 +37,8 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning={true}>
-        <ins className="kakao_ad_area"
-          data-ad-unit="DAN-gganLkOxLt61K1G5"
+        <ins className="kakao_ad_area" style={{display:'none'}}
+          data-ad-unit="DAN-gganLkOxLt61K1G5" 
           data-ad-width="160"
           data-ad-height="600">
         </ins>
