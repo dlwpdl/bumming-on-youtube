@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bumming-on-youtube.vercel.app/sitemap.xml
