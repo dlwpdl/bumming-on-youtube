@@ -1,5 +1,6 @@
 
-import { Key, X, CheckCircle, XCircle } from 'lucide-react';
+import { Key, X, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { validateApiKeySecurity, isValidApiKeyFormat } from '@/lib/env';
 
 interface ApiKeyModalProps {
   showApiKeyModal: boolean;
@@ -23,6 +24,16 @@ export default function ApiKeyModal({
   saveApiKey 
 }: ApiKeyModalProps) {
   if (!showApiKeyModal) return null;
+
+  // 실시간 API 키 검증
+  const validation = tempApiKey.trim() ? validateApiKeySecurity(tempApiKey.trim()) : { isValid: true, errors: [] };
+  const hasFormatError = tempApiKey.trim() && !isValidApiKeyFormat(tempApiKey.trim());
+  
+  const handleApiKeyChange = (value: string) => {
+    // 스페이스와 특수문자 제거 (API 키에 불필요한 문자)
+    const cleanedValue = value.replace(/\s/g, '');
+    setTempApiKey(cleanedValue);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
@@ -53,10 +64,19 @@ export default function ApiKeyModal({
             <input
               type="password"
               value={tempApiKey}
-              onChange={(e) => setTempApiKey(e.target.value)}
-              placeholder="YouTube Data API v3 키를 입력하세요"
-              className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:bg-white transition-all text-base sm:text-lg font-medium"
+              onChange={(e) => handleApiKeyChange(e.target.value)}
+              placeholder="AIza로 시작하는 39자리 YouTube API 키"
+              className={`w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50 border rounded-xl sm:rounded-2xl focus:ring-2 focus:bg-white transition-all text-base sm:text-lg font-medium ${
+                hasFormatError 
+                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                  : 'border-gray-200 focus:ring-red-500 focus:border-red-500'
+              }`}
             />
+            {tempApiKey.trim() && (
+              <div className="text-xs text-gray-500 mt-1">
+                길이: {tempApiKey.length}/39자 {isValidApiKeyFormat(tempApiKey) ? '✓' : '✗'}
+              </div>
+            )}
           </div>
 
           {/* API 키 상태 표시 */}
@@ -75,6 +95,20 @@ export default function ApiKeyModal({
                 <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
               </div>
               <span className="text-sm sm:text-base font-bold text-red-800">API 키가 유효하지 않습니다</span>
+            </div>
+          )}
+
+          {/* 실시간 검증 오류 표시 */}
+          {!validation.isValid && validation.errors.length > 0 && (
+            <div className="space-y-2">
+              {validation.errors.map((error, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+                  <div className="p-2 bg-amber-100 rounded-xl">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <span className="text-sm font-medium text-amber-800">{error}</span>
+                </div>
+              ))}
             </div>
           )}
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { TrendingUp, ChevronDown, Loader, X, BarChart3, Flame, Eye } from 'lucide-react';
+import { cache, cacheKeys } from '@/lib/cache';
 
 interface Trend {
   title: string;
@@ -25,6 +26,7 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [trends, setTrends] = useState<Trend[]>([
     { title: '게임 리뷰', views: '1.2M', growth: '+23%', category: '게임' },
     { title: '먹방 챌린지', views: '890K', growth: '+18%', category: '푸드' },
@@ -124,6 +126,27 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
         return;
       }
 
+      // 캐시 키 생성
+      const cacheKey = cacheKeys.trending(countryCode, categoryId === 'all' ? undefined : categoryId);
+      
+      // 캐시된 데이터 확인
+      const cachedData = cache.get(cacheKey);
+      if (cachedData && cachedData.trends) {
+        console.log('트렌드 캐시에서 로드:', cacheKey);
+        
+        const trendData = cachedData.trends.slice(0, 5).map((item: any) => ({
+          title: item.title || '',
+          views: formatViewCount(item.viewCount || 0),
+          growth: `${item.performanceScore?.toFixed(1) || 0}%`,
+          category: item.category || '기타'
+        }));
+        
+        setTrends(trendData);
+        setLastUpdated(new Date(cachedData.updatedAt || Date.now()));
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/trending', {
         method: 'POST',
         headers: {
@@ -140,6 +163,9 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
       const data = await response.json();
 
       if (response.ok) {
+        // 성공한 응답을 캐시에 저장
+        cache.set(cacheKey, data, { ttl: 600 }); // 10분간 캐시
+        
         // API 응답을 Trend 형식으로 변환
         const apiTrends: Trend[] = data.trends.slice(0, 5).map((trend: any) => ({
           title: trend.title,
@@ -183,6 +209,9 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
   };
 
   const handleSidebarMouseEnter = () => {
+    setIsSidebarOpen(true);
+    
+    // 사이드바가 열릴 때 데이터 갱신 확인
     const now = new Date();
     const timeDiff = now.getTime() - lastUpdated.getTime();
     const updateInterval = 30 * 1000; // 30초 (테스트용)
@@ -202,6 +231,8 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
   };
 
   const handleSidebarMouseLeave = () => {
+    setIsSidebarOpen(false);
+    
     // 마우스가 벗어나면 타이머 취소하고 로딩 상태도 취소
     if (hoverTimer) {
       clearTimeout(hoverTimer);
@@ -261,13 +292,15 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
   if (variant === 'sidebar') {
     return (
       <div 
-        className="fixed right-0 top-20 h-[calc(100vh-5rem)] group z-40"
-        onMouseEnter={handleSidebarMouseEnter}
-        onMouseLeave={handleSidebarMouseLeave}
+        className="fixed right-0 top-20 h-[calc(100vh-5rem)] z-40"
       >
         <div className="relative h-full">
           {/* 사이드바 힌트 탭 - 항상 보이는 부분 */}
-          <div className="absolute right-0 top-20 bg-gradient-to-l from-purple-500 to-purple-600 text-white px-3 py-8 rounded-l-xl shadow-lg group-hover:bg-gradient-to-l group-hover:from-purple-600 group-hover:to-purple-700 transition-all duration-300 cursor-pointer">
+          <div 
+            className="absolute right-0 top-20 bg-gradient-to-l from-purple-500 to-purple-600 text-white px-3 py-8 rounded-l-xl shadow-lg hover:bg-gradient-to-l hover:from-purple-600 hover:to-purple-700 transition-all duration-300 cursor-pointer"
+            onMouseEnter={handleSidebarMouseEnter}
+            onMouseLeave={handleSidebarMouseLeave}
+          >
             <div className="flex flex-col items-center gap-2">
               <TrendingUp className="w-5 h-5" />
               <div className="writing-mode-vertical text-sm font-bold tracking-wider" style={{writingMode: 'vertical-rl'}}>
@@ -281,11 +314,13 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
             </div>
           </div>
           
-          {/* 호버 트리거 영역 - 확장 */}
-          <div className="absolute right-0 top-0 w-12 h-full bg-transparent"></div>
-          
           {/* 사이드바 */}
-          <div className="absolute right-0 top-0 w-80 h-full bg-white/95 backdrop-blur-xl border-l border-gray-200 shadow-2xl transform translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out">
+          <div className={`absolute right-0 top-0 w-96 h-full bg-white/95 backdrop-blur-xl border-l border-gray-200 shadow-2xl transform transition-transform duration-300 ease-out ${
+            isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+            onMouseEnter={handleSidebarMouseEnter}
+            onMouseLeave={handleSidebarMouseLeave}
+          >
             <div className="p-6 h-full overflow-y-auto">
               {/* 헤더 */}
               <div className="mb-6">
@@ -416,12 +451,12 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
                             {index + 1}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-semibold text-gray-900 group-hover/item:text-blue-700 transition-colors text-sm truncate">
-                              {trend.title}
+                            <h5 className="font-semibold text-gray-900 group-hover/item:text-blue-700 transition-colors text-sm leading-tight" title={trend.title}>
+                              {trend.title.length > 35 ? `${trend.title.substring(0, 35)}...` : trend.title}
                             </h5>
-                            <div className="mt-1 flex items-center gap-2 text-xs">
-                              <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium text-xs max-w-16 truncate group-hover/item:bg-blue-200" title={trend.category}>
-                                {trend.category}
+                            <div className="mt-1 flex items-center gap-1 text-xs flex-wrap">
+                              <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium text-xs group-hover/item:bg-blue-200 flex-shrink-0" title={trend.category}>
+                                {trend.category.length > 8 ? `${trend.category.substring(0, 8)}` : trend.category}
                               </span>
                               <span className="flex items-center gap-1 text-gray-600 group-hover/item:text-blue-600">
                                 <Eye className="w-3 h-3" />

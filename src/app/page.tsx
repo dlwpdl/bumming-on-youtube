@@ -4,6 +4,8 @@
 import { useState, useEffect } from 'react';
 import { VideoData } from '@/lib/youtube';
 import { SortField, SortOrder, TabType, ChannelData, FavoriteVideo } from '@/lib/types';
+import { apiKeyStorage, apiKeyUsage } from '@/lib/env';
+import { cache, cacheKeys, withCache } from '@/lib/cache';
 
 import Header from '@/components/Header';
 import TabNavigation from '@/components/TabNavigation';
@@ -72,7 +74,7 @@ export default function Home() {
   const setCurrentSearchQuery = activeTab === 'channels' ? setChannelSearchQuery : setVideoSearchQuery;
 
   useEffect(() => {
-    const savedApiKey = localStorage.getItem('youtube-api-key');
+    const savedApiKey = apiKeyStorage.load();
     if (savedApiKey) {
       setApiKey(savedApiKey);
       setApiKeyStatus('valid');
@@ -343,6 +345,56 @@ export default function Home() {
     try {
       const apiEndpoint = activeTab === 'videos' ? '/api/search' : '/api/search-channels';
       
+      // 캐시 키 생성
+      const searchFilters = activeTab === 'videos' ? {
+        videoDuration: String(filters.videoDuration || 'any'),
+        maxSubscribers: String(filters.maxSubscribers || ''),
+        minViews: String(filters.minViews || ''),
+        categoryId: String(filters.categoryId || ''),
+        maxResults: String(filters.maxResults || '50'),
+        publishedAfter: String(filters.publishedAfter || ''),
+        publishedBefore: String(filters.publishedBefore || ''),
+        sortBy: String(filters.sortBy || 'relevance'),
+        pageToken: pageToken || '',
+      } : {
+        minSubscribers: String(filters.minSubscribers || ''),
+        maxSubscribers: String(filters.maxSubscribers || ''),
+        country: String(filters.country || ''),
+        maxResults: String(filters.maxResults || '50'),
+        pageToken: pageToken || '',
+      };
+
+      const cacheKey = activeTab === 'videos' 
+        ? cacheKeys.videoSearch(currentSearchQuery, searchFilters)
+        : cacheKeys.channelSearch(currentSearchQuery, searchFilters);
+
+      // 캐시된 데이터가 있는지 확인 (첫 번째 검색일 때만)
+      if (isFirstSearch) {
+        const cachedData = cache.get(cacheKey);
+        if (cachedData) {
+          console.log('캐시에서 데이터 로드:', cacheKey);
+          
+          if (activeTab === 'videos') {
+            setVideos(cachedData.videos || []);
+          } else if (activeTab === 'channels') {
+            setChannels(cachedData.channels || []);
+          }
+          
+          setNextPageToken(cachedData.nextPageToken);
+          setTotalResults(cachedData.totalResults || 0);
+          
+          if (isFirstSearch) {
+            setLoading(false);
+          } else {
+            setLoadingPage(false);
+          }
+          return;
+        }
+      }
+
+      // API 사용량 로깅
+      apiKeyUsage.logUsage(activeTab === 'videos' ? 'video-search' : 'channel-search');
+      
       const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
@@ -352,25 +404,16 @@ export default function Home() {
           query: currentSearchQuery,
           apiKey: apiKey,
           pageToken: pageToken,
-          ...(activeTab === 'videos' ? {
-            videoDuration: String(filters.videoDuration || 'any'),
-            maxSubscribers: String(filters.maxSubscribers || ''),
-            minViews: String(filters.minViews || ''),
-            categoryId: String(filters.categoryId || ''),
-            maxResults: String(filters.maxResults || '50'),
-            publishedAfter: String(filters.publishedAfter || ''),
-            publishedBefore: String(filters.publishedBefore || ''),
-            sortBy: String(filters.sortBy || 'relevance'),
-          } : {
-            minSubscribers: String(filters.minSubscribers || ''),
-            maxSubscribers: String(filters.maxSubscribers || ''),
-            country: String(filters.country || ''),
-            maxResults: String(filters.maxResults || '50'),
-          })
+          ...searchFilters
         }),
       });
       
       const data = await response.json();
+      
+      // 성공한 응답만 캐시에 저장 (첫 페이지만)
+      if (response.ok && isFirstSearch) {
+        cache.set(cacheKey, data, { ttl: 300 }); // 5분간 캐시
+      }
       
       if (response.ok) {
         if (activeTab === 'videos') {
@@ -459,7 +502,7 @@ export default function Home() {
 
   const saveApiKey = () => {
     if (apiKeyStatus === 'valid' && tempApiKey.trim()) {
-      localStorage.setItem('youtube-api-key', tempApiKey.trim());
+      apiKeyStorage.save(tempApiKey.trim());
       setApiKey(tempApiKey.trim());
       setShowApiKeyModal(false);
       setTempApiKey('');
@@ -663,7 +706,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
         <div className="flex gap-6">
           {/* 좌측 광고 영역 */}
-          <div className="hidden lg:block w-44 flex-shrink-0">
+          <div className="hidden lg:block w-48 flex-shrink-0">
             <VerticalKakaoAd />
           </div>
           

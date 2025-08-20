@@ -1,4 +1,29 @@
+# Robots.txt for Bumming on YouTube
 User-agent: *
 Allow: /
 
+# 특정 봇에 대한 설정
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
+
+User-agent: NaverBot
+Allow: /
+Crawl-delay: 1
+
+# API 엔드포인트 차단
+Disallow: /api/
+
+# 개인정보 관련 차단
+Disallow: /*apiKey=*
+Disallow: /*api_key=*
+
+# 사이트맵 위치
 Sitemap: https://bumming-on-youtube.vercel.app/sitemap.xml
+
+# 호스트 명시
+Host: https://bumming-on-youtube.vercel.app
