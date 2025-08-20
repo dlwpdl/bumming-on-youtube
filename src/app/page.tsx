@@ -19,6 +19,7 @@ import ErrorMessage from '@/components/ErrorMessage';
 import EmptyState from '@/components/EmptyState';
 import KakaoAd from '@/components/KakaoAd';
 import VerticalKakaoAd from '@/components/VerticalKakaoAd';
+import TrendWidget from '@/components/TrendWidget';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('videos');
@@ -762,6 +763,73 @@ export default function Home() {
         />
 
         <ScrollToTopButton showScrollToTop={showScrollToTop} scrollToTop={scrollToTop} />
+        
+        {/* 사이드바 트렌드 위젯 */}
+        <TrendWidget 
+          variant="sidebar" 
+          apiKey={apiKey} 
+          onSearchTrend={(keyword) => {
+            setVideoSearchQuery(keyword);
+            setActiveTab('videos');
+            
+            // State 업데이트가 완료된 후 검색 실행
+            setTimeout(() => {
+              if (!apiKey) {
+                setError('YouTube API 키가 설정되지 않았습니다. 설정 버튼을 눌러 API 키를 입력해주세요.');
+                return;
+              }
+              
+              setLoading(true);
+              setVideos([]);
+              setCurrentPage(1);
+              setNextPageToken(undefined);
+              setPrevPageTokens([]);
+              setTotalResults(0);
+              setError('');
+              
+              // 직접 API 호출
+              fetch('/api/search', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  query: keyword,
+                  apiKey: apiKey,
+                  videoDuration: String(filters.videoDuration || 'any'),
+                  maxSubscribers: String(filters.maxSubscribers || ''),
+                  minViews: String(filters.minViews || ''),
+                  categoryId: String(filters.categoryId || ''),
+                  maxResults: String(filters.maxResults || '50'),
+                  publishedAfter: String(filters.publishedAfter || ''),
+                  publishedBefore: String(filters.publishedBefore || ''),
+                  sortBy: String(filters.sortBy || 'relevance'),
+                }),
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.videos) {
+                  setVideos(data.videos);
+                  setNextPageToken(data.nextPageToken);
+                  setTotalResults(data.totalResults || 0);
+                  
+                  if (data.videos.length === 0) {
+                    setError('검색 결과가 없습니다. 다른 키워드를 시도해보세요.');
+                  }
+                } else {
+                  setError(data.error || '검색 중 오류가 발생했습니다.');
+                }
+              })
+              .catch(error => {
+                console.error('검색 오류:', error);
+                setError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+              })
+              .finally(() => {
+                setLoading(false);
+              });
+            }, 50);
+          }} 
+        />
       </div>
     </div>
   );

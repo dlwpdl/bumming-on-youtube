@@ -1,5 +1,6 @@
 
 import { Youtube, Sparkles, CheckCircle, XCircle, Settings, FileText } from 'lucide-react';
+import TrendWidget from './TrendWidget';
 
 interface HeaderProps {
   apiKeyStatus: 'none' | 'valid' | 'invalid';
@@ -24,6 +25,7 @@ export default function Header({ apiKeyStatus, openApiKeyModal }: HeaderProps) {
             <p className="text-xs sm:text-sm text-gray-500 font-medium hidden sm:block">고성능 영상 발굴 도구</p>
           </div>
         </div>
+        
         
         {/* 스크립트 분석 플랫폼 버튼 & API 키 상태 */}
         <div className="flex items-center gap-2 sm:gap-3">
