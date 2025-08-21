@@ -130,13 +130,13 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
       const cacheKey = cacheKeys.trending(countryCode, categoryId === 'all' ? undefined : categoryId);
       
       // 캐시된 데이터 확인
-      const cachedData = cache.get(cacheKey);
+      const cachedData = cache.get(cacheKey) as any;
       if (cachedData && cachedData.trends) {
         console.log('트렌드 캐시에서 로드:', cacheKey);
         
         const trendData = cachedData.trends.slice(0, 5).map((item: any) => ({
           title: item.title || '',
-          views: formatViewCount(item.viewCount || 0),
+          views: (item.viewCount || 0).toLocaleString(),
           growth: `${item.performanceScore?.toFixed(1) || 0}%`,
           category: item.category || '기타'
         }));
@@ -455,8 +455,8 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
                               {trend.title.length > 35 ? `${trend.title.substring(0, 35)}...` : trend.title}
                             </h5>
                             <div className="mt-1 flex items-center gap-1 text-xs flex-wrap">
-                              <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium text-xs group-hover/item:bg-blue-200 flex-shrink-0" title={trend.category}>
-                                {trend.category.length > 8 ? `${trend.category.substring(0, 8)}` : trend.category}
+                              <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium text-xs group-hover/item:bg-blue-200 flex-shrink-0" title={trend.category || '기타'}>
+                                {(trend.category || '기타').length > 8 ? `${(trend.category || '기타').substring(0, 8)}` : (trend.category || '기타')}
                               </span>
                               <span className="flex items-center gap-1 text-gray-600 group-hover/item:text-blue-600">
                                 <Eye className="w-3 h-3" />

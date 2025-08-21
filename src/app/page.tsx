@@ -403,8 +403,8 @@ export default function Home() {
         body: JSON.stringify({
           query: currentSearchQuery,
           apiKey: apiKey,
-          pageToken: pageToken,
-          ...searchFilters
+          ...searchFilters,
+          pageToken: pageToken
         }),
       });
       
