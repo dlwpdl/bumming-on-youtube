@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 채널 정보도 가져오기 위해 채널 ID 수집
-    const channelIds = response.data.items.map(item => item.snippet?.channelId).filter(Boolean);
+    const channelIds = response.data.items
+      .map((item) => item.snippet?.channelId)
+      .filter((id): id is string => !!id);
     const uniqueChannelIds = [...new Set(channelIds)];
 
     const channelsResponse = await youtube.channels.list({

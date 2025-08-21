@@ -700,10 +700,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50/30 relative overflow-hidden">
+      {/* Background Decoration */}
+      <div className="absolute top-0 right-0 w-96 h-96 gradient-primary rounded-full blur-3xl opacity-10 float-animation"></div>
+      <div className="absolute bottom-0 left-0 w-80 h-80 gradient-secondary rounded-full blur-3xl opacity-10 float-animation" style={{animationDelay: '3s'}}></div>
+      
       <Header apiKeyStatus={apiKeyStatus} openApiKeyModal={openApiKeyModal} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12 relative z-10">
         <div className="flex gap-6">
           {/* 좌측 광고 영역 */}
           <div className="hidden lg:block w-48 flex-shrink-0">

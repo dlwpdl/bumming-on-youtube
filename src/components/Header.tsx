@@ -9,58 +9,59 @@ interface HeaderProps {
 
 export default function Header({ apiKeyStatus, openApiKeyModal }: HeaderProps) {
   return (
-    <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
+    <div className="glass-effect sticky top-0 z-50 border-b border-white/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-4">
-          <div className="relative">
-            <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/25">
-              <Youtube className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
+          <div className="relative float-animation">
+            <div className="w-10 h-10 sm:w-14 sm:h-14 gradient-primary rounded-2xl flex items-center justify-center shadow-lg">
+              <Youtube className="w-5 h-5 sm:w-8 sm:h-8 text-white" />
             </div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-              <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+            <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-7 sm:h-7 gradient-secondary rounded-full flex items-center justify-center pulse-glow">
+              <Sparkles className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-white" />
             </div>
           </div>
           <div>
-            <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">Bumming On Youtube</h1>
-            <p className="text-xs sm:text-sm text-gray-500 font-medium hidden sm:block">고성능 영상 발굴 도구</p>
+            <h1 className="text-xl sm:text-3xl font-bold gradient-text-primary">Bumming On Youtube</h1>
+            <p className="text-xs sm:text-sm text-gray-600 font-medium hidden sm:block">고성능 영상 발굴 도구 ✨</p>
           </div>
         </div>
         
         
         {/* 스크립트 분석 플랫폼 버튼 & API 키 상태 */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* 스크립트 분석 버튼 */}
           <button
             onClick={() => window.open('https://scripting-on-youtube.vercel.app', '_blank')}
-            className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-full transition-all duration-200 hover:shadow-md"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 glass-effect rounded-2xl hover:shadow-lg transition-all duration-300 hover:scale-105 group"
           >
-            <FileText className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-medium text-purple-700">Bumming On Youtube (Scripting)</span>
+            <FileText className="w-4 h-4 text-purple-600 group-hover:text-purple-700" />
+            <span className="text-sm font-medium gradient-text-secondary">Scripting Platform</span>
           </button>
           
           {/* 모바일용 스크립트 분석 버튼 */}
           <button
             onClick={() => window.open('https://scripting-on-youtube.vercel.app', '_blank')}
-            className="sm:hidden p-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-all duration-200"
+            className="sm:hidden p-2.5 glass-effect rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
           >
             <FileText className="w-4 h-4 text-purple-600" />
           </button>
+          
           {apiKeyStatus === 'valid' ? (
-            <div className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full">
-              <CheckCircle className="w-4 h-4 text-emerald-600" />
-              <span className="text-sm font-medium text-emerald-700">연결됨</span>
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 glass-effect rounded-2xl border-2 border-teal-200/50">
+              <CheckCircle className="w-4 h-4 text-teal-600" />
+              <span className="text-sm font-medium text-teal-700">연결됨</span>
             </div>
           ) : (
-            <div className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 bg-amber-50 border border-amber-200 rounded-full">
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 glass-effect rounded-2xl border-2 border-amber-200/50">
               <XCircle className="w-4 h-4 text-amber-600" />
               <span className="text-sm font-medium text-amber-700">API 키 필요</span>
             </div>
           )}
           
           {/* 모바일용 상태 아이콘 */}
-          <div className="sm:hidden">
+          <div className="sm:hidden p-2 glass-effect rounded-xl">
             {apiKeyStatus === 'valid' ? (
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              <CheckCircle className="w-5 h-5 text-teal-600" />
             ) : (
               <XCircle className="w-5 h-5 text-amber-600" />
             )}
@@ -68,11 +69,7 @@ export default function Header({ apiKeyStatus, openApiKeyModal }: HeaderProps) {
           
           <button
             onClick={openApiKeyModal}
-            className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-200 ${
-              apiKeyStatus === 'valid' 
-                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200' 
-                : 'bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200'
-            } hover:shadow-md`}
+            className="btn-gradient p-2.5 sm:p-3 rounded-xl text-white hover:scale-105 transition-all duration-300"
           >
             <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>

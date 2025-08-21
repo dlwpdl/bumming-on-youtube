@@ -37,15 +37,15 @@ export default function ApiKeyModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200/50 max-w-lg w-full p-4 sm:p-8 animate-in fade-in-0 zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+      <div className="glass-effect rounded-3xl shadow-2xl border border-white/30 max-w-lg w-full p-4 sm:p-8 animate-in fade-in-0 zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-3 sm:p-4 bg-gradient-to-br from-red-500 to-red-600 rounded-xl sm:rounded-2xl shadow-lg">
+            <div className="p-3 sm:p-4 gradient-primary rounded-2xl shadow-lg float-animation">
               <Key className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">API 키 설정</h2>
-              <p className="text-sm sm:text-base text-gray-600 font-medium">YouTube Data API 연결</p>
+              <h2 className="text-xl sm:text-2xl font-bold gradient-text-primary">API 키 설정</h2>
+              <p className="text-sm sm:text-base text-gray-600 font-medium">YouTube Data API 연결 🔑</p>
             </div>
           </div>
           <button
@@ -161,11 +161,11 @@ export default function ApiKeyModal({
             <button
               onClick={testApiKey}
               disabled={!tempApiKey.trim() || testingApiKey}
-              className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl sm:rounded-2xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 transition-all font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              className="flex-1 px-4 sm:px-6 py-3 sm:py-4 glass-effect border-2 border-blue-200 text-blue-700 rounded-2xl hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 transition-all font-bold hover:scale-105 duration-300"
             >
               {testingApiKey ? (
                 <>
-                  <div className="animate-spin w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full" />
+                  <div className="animate-spin w-4 h-4 sm:w-5 sm:h-5 border-2 border-blue-600 border-t-transparent rounded-full" />
                   테스트 중...
                 </>
               ) : (
@@ -178,7 +178,7 @@ export default function ApiKeyModal({
             <button
               onClick={saveApiKey}
               disabled={apiKeyStatus !== 'valid'}
-              className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl sm:rounded-2xl hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 transition-all font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              className="flex-1 btn-gradient px-4 sm:px-6 py-3 sm:py-4 text-white rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 font-bold hover:scale-105 duration-300"
             >
               <Key className="w-4 h-4 sm:w-5 sm:h-5" />
               저장하기
