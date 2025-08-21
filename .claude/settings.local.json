@@ -8,7 +8,10 @@
       "Bash(git add:*)",
       "WebFetch(domain:aya.nl)",
       "WebFetch(domain:datalands.co)",
-      "WebFetch(domain:strangewolfstudios.com)"
+      "WebFetch(domain:strangewolfstudios.com)",
+      "Bash(git config:*)",
+      "Bash(git fetch:*)",
+      "Bash(security delete-internet-password:*)"
     ],
     "deny": [],
     "ask": []

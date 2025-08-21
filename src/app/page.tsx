@@ -370,7 +370,7 @@ export default function Home() {
 
       // 캐시된 데이터가 있는지 확인 (첫 번째 검색일 때만)
       if (isFirstSearch) {
-        const cachedData = cache.get(cacheKey);
+        const cachedData = cache.get(cacheKey) as any;
         if (cachedData) {
           console.log('캐시에서 데이터 로드:', cacheKey);
           
