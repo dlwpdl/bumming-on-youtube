@@ -32,13 +32,18 @@ export async function POST(request: NextRequest) {
       noCheckCertificates: true,
     };
 
-    // 포맷별 옵션 설정
+    // 포맷별 옵션 설정 - 더 유연한 포맷 선택
     if (format === 'video' && quality) {
-      downloadOptions.format = `best[height<=${quality.replace('p', '')}]`;
+      const targetHeight = quality.replace('p', '');
+      // 여러 포맷 옵션을 우선순위대로 시도
+      downloadOptions.format = `best[height<=${targetHeight}]/best[height<=${parseInt(targetHeight)+100}]/best/worst`;
     } else if (format === 'audio') {
-      downloadOptions.format = 'bestaudio';
+      downloadOptions.format = 'bestaudio/best';
       downloadOptions.extractAudio = true;
       downloadOptions.audioFormat = 'mp3';
+    } else {
+      // 기본값: 최고 품질의 비디오
+      downloadOptions.format = 'best/worst';
     }
 
     console.log('다운로드 시작:', { videoId, format, quality, downloadDir });
@@ -53,26 +58,42 @@ export async function POST(request: NextRequest) {
       result
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('다운로드 오류:', error);
     
-    if (error instanceof Error) {
-      if (error.message.includes('Video unavailable')) {
-        return NextResponse.json(
-          { error: '비디오를 찾을 수 없습니다.' },
-          { status: 404 }
-        );
-      }
-      if (error.message.includes('Private video')) {
-        return NextResponse.json(
-          { error: '비공개 비디오입니다.' },
-          { status: 403 }
-        );
-      }
+    // stderr에서 오류 메시지 추출
+    const errorMessage = error.stderr || error.message || '알 수 없는 오류';
+    
+    if (errorMessage.includes('Video unavailable')) {
+      return NextResponse.json(
+        { error: '비디오를 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+    
+    if (errorMessage.includes('Private video')) {
+      return NextResponse.json(
+        { error: '비공개 비디오입니다.' },
+        { status: 403 }
+      );
+    }
+    
+    if (errorMessage.includes('Requested format is not available')) {
+      return NextResponse.json(
+        { error: '요청한 품질로 다운로드할 수 없습니다. 다른 품질을 시도해보세요.' },
+        { status: 400 }
+      );
+    }
+    
+    if (errorMessage.includes('HTTP Error 429')) {
+      return NextResponse.json(
+        { error: '너무 많은 요청으로 일시적으로 차단되었습니다. 잠시 후 다시 시도해주세요.' },
+        { status: 429 }
+      );
     }
     
     return NextResponse.json(
-      { error: '다운로드 중 오류가 발생했습니다.' },
+      { error: `다운로드 중 오류가 발생했습니다: ${errorMessage}` },
       { status: 500 }
     );
   }

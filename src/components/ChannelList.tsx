@@ -165,6 +165,9 @@ export default function ChannelList({
           transform: `scale(${cardScale})`, 
           transformOrigin: 'top center',
           gridTemplateColumns: `repeat(${currentCols}, minmax(0, 1fr))`,
+          width: '100%',
+          maxWidth: '80vw',
+          margin: '0 auto'
         }}
       >
         {sortedChannels.map((channel) => (

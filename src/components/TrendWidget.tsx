@@ -29,6 +29,7 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   
   // 사이즈 슬라이더 관련 state
   const [isSliderVisible, setIsSliderVisible] = useState(false);
@@ -338,100 +339,43 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
 
 
 
-  // Sidebar 스타일
+  // Sidebar 스타일 - 스크롤바 옆에 리스폰시브하게 독립 배치
   if (variant === 'sidebar') {
     return (
-      <div 
-        className="fixed right-0 top-20 h-[calc(100vh-5rem)] z-40"
-        style={{ transform: 'scale(var(--scale-factor))', transformOrigin: 'right top' }}
-      >
-        <div className="relative h-full">
-          {/* 사이드바 힌트 탭 - 항상 보이는 부분 */}
+      <>
+        {/* 토글 버튼 */}
+        <button
+          onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+          className="fixed bg-gradient-to-l from-indigo-500 to-purple-600 text-white px-2 py-4 rounded-l-xl shadow-[0_8px_25px_rgba(139,92,246,0.4)] hover:shadow-[0_8px_35px_rgba(139,92,246,0.6)] hover:bg-gradient-to-l hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 cursor-pointer card-3d z-50"
+          style={{ 
+            right: isSidebarVisible ? '384px' : '0px',
+            top: '50vh',
+            transform: 'translateY(-50%)',
+            zIndex: 10001,
+          }}
+          title={isSidebarVisible ? "트렌드 사이드바 숨기기" : "트렌드 사이드바 보기"}
+        >
+          <div className="flex flex-col items-center gap-1">
+            <TrendingUp className="w-4 h-4" />
+            <div className="writing-mode-vertical text-xs font-black tracking-wider" style={{writingMode: 'vertical-rl'}}>
+              {isSidebarVisible ? '숨김' : '트렌드'}
+            </div>
+          </div>
+        </button>
+
+        {/* 사이드바 */}
+        {isSidebarVisible && (
           <div 
-            className="absolute -right-2 top-16 bg-gradient-to-l from-purple-500 to-purple-600 text-white px-2 py-6 rounded-l-xl shadow-[0_8px_25px_rgba(139,92,246,0.4)] hover:shadow-[0_8px_35px_rgba(139,92,246,0.6)] hover:bg-gradient-to-l hover:from-purple-600 hover:to-purple-700 transition-all duration-300 cursor-pointer card-3d"
-            onMouseEnter={handleSidebarMouseEnter}
-            onMouseLeave={handleSidebarMouseLeave}
-          >
-            <div className="flex flex-col items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              <div className="writing-mode-vertical text-xs font-black tracking-wider" style={{writingMode: 'vertical-rl'}}>
-                트렌드
-              </div>
-              <div className={`w-2 h-2 rounded-full animate-pulse ${
-                isUpdateAvailable() 
-                  ? 'bg-orange-400' 
-                  : 'bg-green-400'
-              }`}></div>
-            </div>
-          </div>
-          
-          {/* 사이즈 슬라이더 힌트 탭 */}
-          <div 
-            className="absolute -right-2 top-64 bg-gradient-to-l from-emerald-500 to-blue-600 text-white px-2 py-6 rounded-l-xl shadow-[0_8px_25px_rgba(16,185,129,0.4)] hover:shadow-[0_8px_35px_rgba(16,185,129,0.6)] transition-all duration-300 cursor-pointer card-3d"
-            onMouseEnter={() => setIsSliderVisible(true)}
-            onMouseLeave={() => setIsSliderVisible(false)}
-          >
-            <div className="flex flex-col items-center gap-2">
-              <Grid className="w-4 h-4" />
-              <div className="writing-mode-vertical text-xs font-black tracking-wider" style={{writingMode: 'vertical-rl'}}>
-                사이즈
-              </div>
-            </div>
-          </div>
-          
-          {/* 사이즈 슬라이더 */}
-          <div
-            className={`absolute -right-12 top-56 w-12 h-80 transition-all duration-300 ${
-              isSliderVisible ? 'translate-x-0 opacity-100' : 'translate-x-20 opacity-0'
-            }`}
-            onMouseEnter={() => setIsSliderVisible(true)}
-            onMouseLeave={() => setIsSliderVisible(false)}
-          >
-            <div className="relative w-full h-full neo-glass holographic-effect rounded-2xl border border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-3">
-              {/* Cyberpunk Border Animation */}
-              <div className="absolute inset-0 rounded-2xl morphing-gradient opacity-20"></div>
-              
-              <div className="relative z-10 h-full flex flex-col items-center">
-                {/* 상단 아이콘 */}
-                <Maximize2 className="w-4 h-4 text-emerald-400 mb-2" />
-                
-                {/* 슬라이더 트랙 */}
-                <div 
-                  ref={sliderRef}
-                  className="flex-1 w-2 bg-gray-600/30 rounded-full relative cursor-pointer"
-                  onMouseDown={handleMouseDown}
-                >
-                  {/* 슬라이더 그라디언트 배경 */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-500 to-blue-500 rounded-full opacity-30"></div>
-                  
-                  {/* 슬라이더 핸들 */}
-                  <div
-                    className="absolute w-6 h-6 bg-gradient-to-br from-emerald-400 to-blue-600 rounded-full shadow-[0_4px_15px_rgba(16,185,129,0.6)] border-2 border-white/20 transform -translate-x-2 -translate-y-3 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform duration-200"
-                    style={{ top: getSliderPosition() }}
-                  >
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-300 to-blue-500 animate-pulse"></div>
-                  </div>
-                </div>
-                
-                {/* 하단 아이콘 */}
-                <Minimize2 className="w-4 h-4 text-emerald-400 mt-2" />
-                
-                {/* 스케일 표시 */}
-                <div className="mt-3 px-2 py-1 bg-gray-800/80 rounded-lg border border-emerald-400/30">
-                  <span className="text-xs font-bold text-emerald-300">
-                    {Math.round(cardScale * 100)}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* 사이드바 */}
-          <div className={`absolute right-0 top-0 w-96 h-full neo-glass border-l border-blue-400/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)] transform transition-transform duration-300 ease-out ${
-            isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-            onMouseEnter={handleSidebarMouseEnter}
-            onMouseLeave={handleSidebarMouseLeave}
+            className="bg-gray-900/95 border-l border-blue-400/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl"
+            style={{ 
+              position: 'fixed',
+              right: '0px',
+              top: '0',
+              width: 'min(384px, 25vw)',
+              height: '100vh',
+              zIndex: 10000,
+              pointerEvents: 'auto',
+            }}
           >
             <div className="p-4 h-full overflow-y-auto">
               {/* 헤더 */}
@@ -464,22 +408,22 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
               
               {/* 국가 선택 */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">국가 선택</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">국가 선택</label>
                 <div className="relative">
                   <button
                     onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
                     disabled={isLoading}
-                    className={`w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl transition-all duration-200 ${
+                    className={`w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-800 to-gray-700 border border-purple-400/30 rounded-xl transition-all duration-200 text-white ${
                       isLoading 
                         ? 'opacity-50 cursor-not-allowed' 
-                        : 'hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100'
+                        : 'hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-600'
                     }`}
                   >
                     <span className="flex items-center gap-3">
                       <span className="text-xl">{countries.find(c => c.code === selectedCountry)?.flag}</span>
-                      <span className="font-medium">{countries.find(c => c.code === selectedCountry)?.name}</span>
+                      <span className="font-medium text-white">{countries.find(c => c.code === selectedCountry)?.name}</span>
                     </span>
-                    <ChevronDown className={`w-5 h-5 text-purple-600 transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-5 h-5 text-purple-400 transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
                   {isCountryDropdownOpen && (
@@ -501,22 +445,22 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
               
               {/* 카테고리 선택 */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">카테고리 선택</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">카테고리 선택</label>
                 <div className="relative">
                   <button
                     onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
                     disabled={isLoading}
-                    className={`w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl transition-all duration-200 ${
+                    className={`w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-800 to-gray-700 border border-blue-400/30 rounded-xl transition-all duration-200 text-white ${
                       isLoading 
                         ? 'opacity-50 cursor-not-allowed' 
-                        : 'hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100'
+                        : 'hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-600'
                     }`}
                   >
                     <span className="flex items-center gap-3">
                       <span className="text-lg">{categories.find(c => c.id === selectedCategory)?.icon}</span>
-                      <span className="font-medium">{categories.find(c => c.id === selectedCategory)?.name}</span>
+                      <span className="font-medium text-white">{categories.find(c => c.id === selectedCategory)?.name}</span>
                     </span>
-                    <ChevronDown className={`w-5 h-5 text-blue-600 transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-5 h-5 text-blue-400 transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
                   {isCategoryDropdownOpen && (
@@ -546,7 +490,7 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Loader className="w-8 h-8 animate-spin text-orange-500 mb-3" />
-                    <p className="text-sm text-gray-600 font-medium">최신 트렌드 업데이트 중...</p>
+                    <p className="text-sm text-gray-300 font-medium">최신 트렌드 업데이트 중...</p>
                     <p className="text-xs text-gray-400 mt-1">잠시만 기다려주세요</p>
                   </div>
                 ) : (
@@ -555,7 +499,7 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
                       <div
                         key={index}
                         onClick={() => handleTrendClick(trend)}
-                        className="p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg hover:from-blue-50 hover:to-purple-50 cursor-pointer transition-all duration-200 group/item hover:shadow-md border-2 border-transparent hover:border-blue-200"
+                        className="p-3 bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg hover:from-blue-900/50 hover:to-purple-900/50 cursor-pointer transition-all duration-200 group/item hover:shadow-md border-2 border-transparent hover:border-blue-400/50"
                         title={`"${trend.title}" 검색하기`}
                       >
                         <div className="flex items-center gap-3">
@@ -563,22 +507,22 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
                             {index + 1}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-semibold text-white group-hover/item:text-blue-300 transition-colors text-sm leading-tight" title={trend.title}>
+                            <h5 className="font-semibold text-gray-100 group-hover/item:text-blue-300 transition-colors text-sm leading-tight" title={trend.title}>
                               {trend.title.length > 35 ? `${trend.title.substring(0, 35)}...` : trend.title}
                             </h5>
                             <div className="mt-1 flex items-center gap-1 text-xs flex-wrap">
-                              <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium text-xs group-hover/item:bg-blue-200 flex-shrink-0" title={trend.category || '기타'}>
+                              <span className="bg-blue-900/60 text-blue-300 px-1.5 py-0.5 rounded-full font-medium text-xs group-hover/item:bg-blue-800/60 flex-shrink-0" title={trend.category || '기타'}>
                                 {(trend.category || '기타').length > 8 ? `${(trend.category || '기타').substring(0, 8)}` : (trend.category || '기타')}
                               </span>
-                              <span className="flex items-center gap-1 text-gray-600 group-hover/item:text-blue-600">
+                              <span className="flex items-center gap-1 text-gray-300 group-hover/item:text-blue-300">
                                 <Eye className="w-3 h-3" />
                                 {trend.views}
                               </span>
-                              <span className="text-green-600 font-bold group-hover/item:text-green-700">{trend.growth}</span>
+                              <span className="text-green-400 font-bold group-hover/item:text-green-300">{trend.growth}</span>
                             </div>
                           </div>
                           <div className="opacity-0 group-hover/item:opacity-100 transition-opacity">
-                            <div className="text-blue-500 text-xs font-medium bg-blue-100 px-2 py-1 rounded-full">
+                            <div className="text-blue-300 text-xs font-medium bg-blue-900/60 px-2 py-1 rounded-full">
                               검색
                             </div>
                           </div>
@@ -590,8 +534,8 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        )}
+      </>
     );
   }
 

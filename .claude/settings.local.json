@@ -14,7 +14,8 @@
       "Bash(security delete-internet-password:*)",
       "Bash(npm run lint)",
       "Bash(npm run build:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": [],

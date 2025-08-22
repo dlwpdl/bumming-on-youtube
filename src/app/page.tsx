@@ -702,6 +702,7 @@ export default function Home() {
     getTimeAgo,
     getDateColorClass,
     getPerformanceColor,
+    cardScale,
   };
 
   return (
@@ -710,7 +711,7 @@ export default function Home() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600 rounded-full blur-3xl opacity-5 float-animation"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-600 rounded-full blur-3xl opacity-5 float-animation" style={{animationDelay: '3s'}}></div>
       
-      <Header apiKeyStatus={apiKeyStatus} openApiKeyModal={openApiKeyModal} />
+      <Header apiKeyStatus={apiKeyStatus} openApiKeyModal={openApiKeyModal} cardScale={cardScale} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-12 relative z-10 main-content">
         {/* 메인 컨텐츠 영역 - 중앙 정렬 */}
@@ -812,77 +813,77 @@ export default function Home() {
         />
 
         <ScrollToTopButton showScrollToTop={showScrollToTop} scrollToTop={scrollToTop} />
-        
-        {/* 사이드바 트렌드 위젯 */}
-        <TrendWidget 
-          variant="sidebar" 
-          apiKey={apiKey}
-          cardScale={cardScale}
-          setCardScale={setCardScale}
-          onSearchTrend={(keyword) => {
-            setVideoSearchQuery(keyword);
-            setActiveTab('videos');
-            
-            // State 업데이트가 완료된 후 검색 실행
-            setTimeout(() => {
-              if (!apiKey) {
-                setError('YouTube API 키가 설정되지 않았습니다. 설정 버튼을 눌러 API 키를 입력해주세요.');
-                return;
-              }
-              
-              setLoading(true);
-              setVideos([]);
-              setCurrentPage(1);
-              setNextPageToken(undefined);
-              setPrevPageTokens([]);
-              setTotalResults(0);
-              setError('');
-              
-              // 직접 API 호출
-              fetch('/api/search', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  query: keyword,
-                  apiKey: apiKey,
-                  videoDuration: String(filters.videoDuration || 'any'),
-                  maxSubscribers: String(filters.maxSubscribers || ''),
-                  minViews: String(filters.minViews || ''),
-                  categoryId: String(filters.categoryId || ''),
-                  maxResults: String(filters.maxResults || '50'),
-                  publishedAfter: String(filters.publishedAfter || ''),
-                  publishedBefore: String(filters.publishedBefore || ''),
-                  sortBy: String(filters.sortBy || 'relevance'),
-                }),
-              })
-              .then(response => response.json())
-              .then(data => {
-                if (data.videos) {
-                  setVideos(data.videos);
-                  setNextPageToken(data.nextPageToken);
-                  setTotalResults(data.totalResults || 0);
-                  
-                  if (data.videos.length === 0) {
-                    setError('검색 결과가 없습니다. 다른 키워드를 시도해보세요.');
-                  }
-                } else {
-                  setError(data.error || '검색 중 오류가 발생했습니다.');
-                }
-              })
-              .catch(error => {
-                console.error('검색 오류:', error);
-                setError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
-              })
-              .finally(() => {
-                setLoading(false);
-              });
-            }, 50);
-          }} 
-        />
 
       </div>
+      
+      {/* 사이드바 트렌드 위젯 - 완전히 독립적 */}
+      <TrendWidget 
+        variant="sidebar" 
+        apiKey={apiKey}
+        cardScale={cardScale}
+        setCardScale={setCardScale}
+        onSearchTrend={(keyword) => {
+          setVideoSearchQuery(keyword);
+          setActiveTab('videos');
+          
+          // State 업데이트가 완료된 후 검색 실행
+          setTimeout(() => {
+            if (!apiKey) {
+              setError('YouTube API 키가 설정되지 않았습니다. 설정 버튼을 눌러 API 키를 입력해주세요.');
+              return;
+            }
+            
+            setLoading(true);
+            setVideos([]);
+            setCurrentPage(1);
+            setNextPageToken(undefined);
+            setPrevPageTokens([]);
+            setTotalResults(0);
+            setError('');
+            
+            // 직접 API 호출
+            fetch('/api/search', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: keyword,
+                apiKey: apiKey,
+                videoDuration: String(filters.videoDuration || 'any'),
+                maxSubscribers: String(filters.maxSubscribers || ''),
+                minViews: String(filters.minViews || ''),
+                categoryId: String(filters.categoryId || ''),
+                maxResults: String(filters.maxResults || '50'),
+                publishedAfter: String(filters.publishedAfter || ''),
+                publishedBefore: String(filters.publishedBefore || ''),
+                sortBy: String(filters.sortBy || 'relevance'),
+              }),
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.videos) {
+                setVideos(data.videos);
+                setNextPageToken(data.nextPageToken);
+                setTotalResults(data.totalResults || 0);
+                
+                if (data.videos.length === 0) {
+                  setError('검색 결과가 없습니다. 다른 키워드를 시도해보세요.');
+                }
+              } else {
+                setError(data.error || '검색 중 오류가 발생했습니다.');
+              }
+            })
+            .catch(error => {
+              console.error('검색 오류:', error);
+              setError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+            })
+            .finally(() => {
+              setLoading(false);
+            });
+          }, 50);
+        }} 
+      />
     </div>
   );
 }

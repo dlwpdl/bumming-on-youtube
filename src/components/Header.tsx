@@ -5,9 +5,10 @@ import TrendWidget from './TrendWidget';
 interface HeaderProps {
   apiKeyStatus: 'none' | 'valid' | 'invalid';
   openApiKeyModal: () => void;
+  cardScale?: number;
 }
 
-export default function Header({ apiKeyStatus, openApiKeyModal }: HeaderProps) {
+export default function Header({ apiKeyStatus, openApiKeyModal, cardScale = 1.0 }: HeaderProps) {
   return (
     <div className="relative neo-glass holographic-effect sticky top-0 z-50 border-b border-blue-400/20">
       {/* Cyberpunk Border Animation */}

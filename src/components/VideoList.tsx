@@ -74,37 +74,8 @@ export default function VideoList({
     return () => window.removeEventListener('resize', updateScreenSize);
   }, []);
 
-  // cardScale에 따른 동적 그리드 계산
-  const getDynamicGridCols = () => {
-    // cardScale: 0.7(작음) ~ 1.3(큼)
-    // 역비례: 작을수록 많은 컬럼, 클수록 적은 컬럼
-    const baseScale = 1.0;
-    const scaleFactor = baseScale / cardScale; // 0.77 ~ 1.43
-    
-    // 모바일
-    const mobile = Math.max(1, Math.min(4, Math.round(2 * scaleFactor)));
-    // 태블릿 
-    const tablet = Math.max(2, Math.min(6, Math.round(3 * scaleFactor)));
-    // 데스크탑
-    const desktop = Math.max(2, Math.min(8, Math.round(4 * scaleFactor)));
-    // 대형화면
-    const large = Math.max(3, Math.min(10, Math.round(5 * scaleFactor)));
-    
-    return {
-      mobile,
-      tablet, 
-      desktop,
-      large
-    };
-  };
-
-  const gridCols = getDynamicGridCols();
-  
-  // 현재 화면 크기에 맞는 컬럼 수 선택
-  const currentCols = screenSize === 'mobile' ? gridCols.mobile :
-                     screenSize === 'tablet' ? gridCols.tablet :
-                     screenSize === 'desktop' ? gridCols.desktop :
-                     gridCols.large;
+  // 고정된 2컬럼 그리드
+  const currentCols = 2;
   
   return (
     <div className="space-y-8">
@@ -176,14 +147,9 @@ export default function VideoList({
         </div>
       </div>
       
-      {/* 영상 카드 그리드 */}
+      {/* 영상 카드 그리드 - 고정 2컬럼 */}
       <div 
-        className="grid gap-4 sm:gap-6"
-        style={{ 
-          transform: `scale(${cardScale})`, 
-          transformOrigin: 'top center',
-          gridTemplateColumns: `repeat(${currentCols}, minmax(0, 1fr))`,
-        }}
+        className="grid grid-cols-2 gap-6 max-w-6xl mx-auto"
       >
         {sortedVideos.map((video) => (
           <VideoCard 
