@@ -37,7 +37,7 @@ export default function ApiKeyModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="glass-effect rounded-3xl shadow-2xl border border-white/30 max-w-lg w-full p-4 sm:p-8 animate-in fade-in-0 zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+      <div className="neo-glass holographic-effect rounded-3xl shadow-2xl border border-blue-400/30 max-w-lg w-full p-4 sm:p-8 animate-in fade-in-0 zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="p-3 sm:p-4 gradient-primary rounded-2xl shadow-lg float-animation">
@@ -50,7 +50,7 @@ export default function ApiKeyModal({
           </div>
           <button
             onClick={closeApiKeyModal}
-            className="p-2 sm:p-3 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors"
+            className="p-2 sm:p-3 hover:bg-gray-700 rounded-xl sm:rounded-2xl transition-colors"
           >
             <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
           </button>
@@ -58,7 +58,7 @@ export default function ApiKeyModal({
 
         <div className="space-y-4 sm:space-y-6">
           <div>
-            <label className="block text-sm font-bold text-gray-800 mb-2 sm:mb-3">
+            <label className="block text-sm font-bold text-white mb-2 sm:mb-3">
               API 키 입력
             </label>
             <input
@@ -66,10 +66,10 @@ export default function ApiKeyModal({
               value={tempApiKey}
               onChange={(e) => handleApiKeyChange(e.target.value)}
               placeholder="AIza로 시작하는 39자리 YouTube API 키"
-              className={`w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50 border rounded-xl sm:rounded-2xl focus:ring-2 focus:bg-white transition-all text-base sm:text-lg font-medium ${
+              className={`w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-800 border rounded-xl sm:rounded-2xl focus:ring-2 focus:bg-gray-700 transition-all text-base sm:text-lg font-medium text-white placeholder-gray-400 ${
                 hasFormatError 
                   ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                  : 'border-gray-200 focus:ring-red-500 focus:border-red-500'
+                  : 'border-gray-600 focus:ring-blue-500 focus:border-blue-500'
               }`}
             />
             {tempApiKey.trim() && (
@@ -116,7 +116,7 @@ export default function ApiKeyModal({
           <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200/50 rounded-xl sm:rounded-2xl">
             <h3 className="font-bold text-blue-900 mb-3 sm:mb-4 text-base sm:text-lg">📋 API 키 발급 가이드</h3>
             <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white/50 rounded-lg sm:rounded-xl">
+              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800/50 rounded-lg sm:rounded-xl">
                 <span className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
                 <span className="font-semibold text-blue-900">
                   <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-700">
@@ -124,15 +124,15 @@ export default function ApiKeyModal({
                   </a> 접속
                 </span>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white/50 rounded-lg sm:rounded-xl">
+              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800/50 rounded-lg sm:rounded-xl">
                 <span className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
                 <span className="font-semibold text-blue-900">프로젝트 생성 또는 선택</span>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white/50 rounded-lg sm:rounded-xl">
+              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800/50 rounded-lg sm:rounded-xl">
                 <span className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
                 <span className="font-semibold text-blue-900">YouTube Data API v3 활성화</span>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white/50 rounded-lg sm:rounded-xl">
+              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800/50 rounded-lg sm:rounded-xl">
                 <span className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">4</span>
                 <span className="font-semibold text-blue-900">API 키 생성 후 복사하여 붙여넣기</span>
               </div>

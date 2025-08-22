@@ -35,6 +35,52 @@
   --radius-medium: 12px;
   --radius-large: 20px;
   --radius-xl: 24px;
+  
+  /* Responsive Scaling Variables */
+  --scale-factor: 1;
+  --spacing-scale: 1;
+  --text-scale: 1;
+}
+
+/* Responsive scaling based on screen size - 더 작은 기준 */
+@media (max-width: 768px) {
+  :root {
+    --scale-factor: 0.65;
+    --spacing-scale: 0.7;
+    --text-scale: 0.8;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  :root {
+    --scale-factor: 0.7;
+    --spacing-scale: 0.75;
+    --text-scale: 0.85;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1366px) {
+  :root {
+    --scale-factor: 0.75;
+    --spacing-scale: 0.8;
+    --text-scale: 0.9;
+  }
+}
+
+@media (min-width: 1367px) and (max-width: 1920px) {
+  :root {
+    --scale-factor: 0.85;
+    --spacing-scale: 0.9;
+    --text-scale: 0.95;
+  }
+}
+
+@media (min-width: 1921px) {
+  :root {
+    --scale-factor: 0.95;
+    --spacing-scale: 0.95;
+    --text-scale: 1;
+  }
 }
 
 /* Global Styles */
@@ -129,29 +175,207 @@ body {
   color: white;
 }
 
-/* Animations */
+/* Ultra Modern 3D Animations */
 @keyframes float {
   0%, 100% {
-    transform: translateY(0px);
+    transform: translateY(0px) rotateX(0deg);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-10px) rotateX(5deg);
   }
 }
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 5px var(--accent-blue), 0 0 10px var(--accent-blue), 0 0 15px var(--accent-blue);
+    box-shadow: 0 0 20px var(--accent-blue), 0 0 40px var(--accent-blue), 0 0 60px var(--accent-blue);
   }
   50% {
-    box-shadow: 0 0 10px var(--accent-blue), 0 0 20px var(--accent-blue), 0 0 30px var(--accent-blue);
+    box-shadow: 0 0 40px var(--accent-blue), 0 0 80px var(--accent-blue), 0 0 120px var(--accent-blue);
+  }
+}
+
+@keyframes morphing-gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    background-position: 100% 50%;
+    transform: scale(1.05) rotate(1deg);
+  }
+  50% {
+    background-position: 100% 0%;
+    transform: scale(1.1) rotate(0deg);
+  }
+  75% {
+    background-position: 0% 0%;
+    transform: scale(1.05) rotate(-1deg);
+  }
+}
+
+@keyframes holographic-shine {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes levitate {
+  0%, 100% {
+    transform: translateY(0px) translateZ(0px) rotateX(0deg) rotateY(0deg);
+  }
+  50% {
+    transform: translateY(-20px) translateZ(20px) rotateX(5deg) rotateY(2deg);
   }
 }
 
 .float-animation {
-  animation: float 6s ease-in-out infinite;
+  animation: levitate 6s ease-in-out infinite;
 }
 
 .pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: pulse-glow 3s ease-in-out infinite;
 }
+
+.morphing-gradient {
+  background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #00f2fe);
+  background-size: 400% 400%;
+  animation: morphing-gradient 8s ease-in-out infinite;
+}
+
+.holographic-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.holographic-effect::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: holographic-shine 3s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Ultra Modern Glass Effect */
+.neo-glass {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Cyberpunk Neon Effects */
+.cyber-glow {
+  box-shadow: 
+    0 0 20px currentColor,
+    0 0 40px currentColor,
+    0 0 60px currentColor,
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+/* Modern 3D Card Transform */
+.card-3d {
+  transform-style: preserve-3d;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.card-3d:hover {
+  transform: 
+    perspective(1000px) 
+    rotateX(5deg) 
+    rotateY(-5deg) 
+    scale3d(1.05, 1.05, 1.05)
+    translateZ(20px);
+}
+
+/* Custom Slider Styles */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 5px;
+  outline: none;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #3B82F6, #8B5CF6);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #3B82F6, #8B5CF6);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive Scaling Utilities */
+.responsive-scale {
+  transform: scale(var(--scale-factor));
+  transform-origin: center;
+}
+
+.responsive-text {
+  font-size: calc(1rem * var(--text-scale));
+}
+
+.responsive-spacing {
+  padding: calc(1rem * var(--spacing-scale));
+  margin: calc(0.5rem * var(--spacing-scale));
+}
+
+.responsive-container {
+  transform: scale(var(--scale-factor));
+  transform-origin: top left;
+  width: calc(100% / var(--scale-factor));
+  height: calc(100% / var(--scale-factor));
+}
+
+/* Apply responsive scaling to main components */
+.main-content {
+  transform: scale(var(--scale-factor));
+  transform-origin: center top;
+}
+
+/* Responsive card sizing */
+.responsive-card {
+  transform: scale(var(--scale-factor));
+  transform-origin: center;
+  margin: calc(0.5rem * var(--spacing-scale));
+}
+
+/* Responsive text sizing for different elements */
+h1.responsive { font-size: calc(2.5rem * var(--text-scale)); }
+h2.responsive { font-size: calc(2rem * var(--text-scale)); }
+h3.responsive { font-size: calc(1.5rem * var(--text-scale)); }
+h4.responsive { font-size: calc(1.25rem * var(--text-scale)); }
+p.responsive { font-size: calc(1rem * var(--text-scale)); }
+.text-sm.responsive { font-size: calc(0.875rem * var(--text-scale)); }
+.text-xs.responsive { font-size: calc(0.75rem * var(--text-scale)); }

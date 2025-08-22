@@ -20,8 +20,9 @@ import ScrollToTopButton from '@/components/ScrollToTopButton';
 import ErrorMessage from '@/components/ErrorMessage';
 import EmptyState from '@/components/EmptyState';
 import KakaoAd from '@/components/KakaoAd';
-import VerticalKakaoAd from '@/components/VerticalKakaoAd';
 import TrendWidget from '@/components/TrendWidget';
+
+export type ViewSize = 'small' | 'medium' | 'large';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('videos');
@@ -69,6 +70,10 @@ export default function Home() {
   const [tempApiKey, setTempApiKey] = useState('');
   const [apiKeyStatus, setApiKeyStatus] = useState<'none' | 'valid' | 'invalid'>('none');
   const [testingApiKey, setTestingApiKey] = useState(false);
+
+  // View Controls State
+  const [viewSize, setViewSize] = useState<ViewSize>('medium');
+  const [cardScale, setCardScale] = useState(1.0);
 
   const currentSearchQuery = activeTab === 'channels' ? channelSearchQuery : videoSearchQuery;
   const setCurrentSearchQuery = activeTab === 'channels' ? setChannelSearchQuery : setVideoSearchQuery;
@@ -707,15 +712,9 @@ export default function Home() {
       
       <Header apiKeyStatus={apiKeyStatus} openApiKeyModal={openApiKeyModal} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12 relative z-10">
-        <div className="flex gap-6">
-          {/* 좌측 광고 영역 */}
-          <div className="hidden lg:block w-48 flex-shrink-0">
-            <VerticalKakaoAd />
-          </div>
-          
-          {/* 우측 메인 컨텐츠 영역 */}
-          <div className="flex-1 min-w-0">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-12 relative z-10 main-content">
+        {/* 메인 컨텐츠 영역 - 중앙 정렬 */}
+        <div className="w-full">
             <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} selectedChannelId={selectedChannelId} />
 
             <SearchSection 
@@ -744,6 +743,8 @@ export default function Home() {
                 handlePrevPage={() => handlePrevPage()} 
                 handleNextPage={() => handleNextPage()} 
                 loadingPage={loadingPage} 
+                viewSize={viewSize}
+                cardScale={cardScale}
                 {...videoCardProps}
               />
             )}
@@ -761,6 +762,8 @@ export default function Home() {
                 handlePrevPage={() => handlePrevPage()} 
                 handleNextPage={() => handleNextPage()} 
                 loadingPage={loadingPage} 
+                viewSize={viewSize}
+                cardScale={cardScale}
                 selectedChannelId={selectedChannelId}
                 setSelectedChannelId={setSelectedChannelId}
                 loadChannelAnalysis={loadChannelAnalysis}
@@ -795,7 +798,6 @@ export default function Home() {
               height="100"
               className="mt-8 mb-4"
             />
-          </div>
         </div>
 
         <ApiKeyModal 
@@ -814,7 +816,9 @@ export default function Home() {
         {/* 사이드바 트렌드 위젯 */}
         <TrendWidget 
           variant="sidebar" 
-          apiKey={apiKey} 
+          apiKey={apiKey}
+          cardScale={cardScale}
+          setCardScale={setCardScale}
           onSearchTrend={(keyword) => {
             setVideoSearchQuery(keyword);
             setActiveTab('videos');
@@ -877,6 +881,7 @@ export default function Home() {
             }, 50);
           }} 
         />
+
       </div>
     </div>
   );

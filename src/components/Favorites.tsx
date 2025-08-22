@@ -29,8 +29,8 @@ export default function Favorites({
     return (
       <div className="text-center py-20">
         <Heart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-        <h3 className="text-xl font-bold text-gray-900">즐겨찾기 목록이 비어있습니다.</h3>
-        <p className="text-gray-600">영상 카드에서 하트 버튼을 눌러 즐겨찾기에 추가하세요.</p>
+        <h3 className="text-xl font-bold text-white">즐겨찾기 목록이 비어있습니다.</h3>
+        <p className="text-gray-300">영상 카드에서 하트 버튼을 눌러 즐겨찾기에 추가하세요.</p>
       </div>
     );
   }

@@ -66,153 +66,156 @@ export default function VideoCard({
     }
   };
   return (
-    <div className="group relative bg-white/80 backdrop-blur-xl border border-gray-200/50 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.01]">
-      <div className="p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-          {/* 썸네일 */}
-          <div className="flex-shrink-0 w-full sm:w-auto">
-            <div className="relative">
-              <img
-                src={video.thumbnail}
-                alt={video.title}
-                className="w-full sm:w-48 h-48 sm:h-28 object-cover rounded-xl sm:rounded-2xl shadow-md group-hover:shadow-lg transition-shadow"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-xl sm:rounded-2xl transition-colors"></div>
-              <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-white text-xs font-medium rounded-lg">
-                {formatDuration(video.duration)}
-              </div>
+    <div className="group relative neo-glass holographic-effect card-3d rounded-3xl overflow-hidden">
+      {/* Cyberpunk Border Animation */}
+      <div className="absolute inset-0 rounded-3xl morphing-gradient opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+      
+      <div className="relative z-10 p-4 flex gap-4">
+        {/* Floating Thumbnail Section - 왼쪽 */}
+        <div className="relative flex-shrink-0 w-64">
+          <div className="relative overflow-hidden rounded-2xl group-hover:scale-105 transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <img
+              src={video.thumbnail}
+              alt={video.title}
+              className="w-full h-36 object-cover"
+            />
+            {/* Holographic Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-purple-500/10 group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-all duration-500"></div>
+            
+            {/* Floating Duration Badge */}
+            <div className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/90 backdrop-blur-sm text-white text-sm font-bold rounded-full border border-white/20">
+              {formatDuration(video.duration)}
             </div>
             
-            {/* 썸네일 액션 버튼들 - 썸네일 아래로 이동 */}
-            <div className="mt-2 flex gap-1">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  downloadThumbnail(video.id, video.title, '4k');
-                }}
-                disabled={downloadingThumbnails.has(video.id)}
-                className="flex items-center gap-1 p-1.5 bg-black/70 hover:bg-black/90 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="썸네일 다운로드 (4K)"
+            {/* Performance Score Badge */}
+            <div className={`absolute top-3 left-3 px-3 py-1.5 bg-gradient-to-r ${getPerformanceColor(video.performanceScore).bg} text-white text-sm font-bold rounded-full shadow-lg cyber-glow flex items-center gap-1`}>
+              <Zap className="w-4 h-4" />
+              {video.performanceScore.toFixed(1)}%
+              <span className="text-base">{getPerformanceColor(video.performanceScore).icon}</span>
+            </div>
+            
+            {/* Play Button Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+              <a
+                href={`https://youtube.com/watch?v=${video.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.5)] hover:shadow-[0_0_50px_rgba(239,68,68,0.8)] transition-all duration-300 hover:scale-110"
               >
-                {downloadingThumbnails.has(video.id) ? (
-                  <Loader className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Download className="w-3 h-3" />
-                )}
-              </button>
-              
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  copyVideoUrl(video.id);
-                }}
-                className="p-1.5 bg-black/70 hover:bg-black/90 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                title="영상 URL 복사"
-              >
-                {copiedUrls.has(video.id) ? (
-                  <Check className="w-3 h-3 text-green-400" />
-                ) : (
-                  <Copy className="w-3 h-3" />
-                )}
-              </button>
-              
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleVideoDownload();
-                }}
-                disabled={downloadingVideo}
-                className="p-1.5 bg-red-600/80 hover:bg-red-600 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50"
-                title="영상 다운로드 (720p)"
-              >
-                {downloadingVideo ? (
-                  <Loader className="w-3 h-3 animate-spin" />
-                ) : downloadCompleted ? (
-                  <Check className="w-3 h-3 text-green-400" />
-                ) : (
-                  <Link className="w-3 h-3" />
-                )}
-              </button>
+                <Play className="w-8 h-8 text-white ml-1" fill="currentColor" />
+              </a>
             </div>
           </div>
           
-          {/* 콘텐츠 */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1 min-w-0 mr-3 sm:mr-4">
-                <h4 className="text-base sm:text-lg font-bold text-gray-900 leading-tight mb-2 group-hover:text-red-600 transition-colors line-clamp-2">
-                  {video.title}
-                </h4>
-                <p className="text-sm sm:text-base text-gray-600 font-medium mb-2">{video.channelTitle}</p>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${getDateColorClass(video.publishedAt)} text-white shadow-sm`}>
-                    <Clock className="w-3 h-3 mr-1" />
-                    {getTimeAgo(video.publishedAt)}
-                  </div>
-                  <span className="text-xs text-gray-500">
-                    {formatDate(video.publishedAt)}
-                  </span>
-                </div>
-                
-                
+          {/* Floating Action Buttons */}
+          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                downloadThumbnail(video.id, video.title, '4k');
+              }}
+              disabled={downloadingThumbnails.has(video.id)}
+              className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white shadow-[0_8px_25px_rgba(59,130,246,0.4)] hover:shadow-[0_8px_35px_rgba(59,130,246,0.6)] transition-all duration-300 hover:scale-110 disabled:opacity-50"
+              title="썸네일 다운로드 (4K)"
+            >
+              {downloadingThumbnails.has(video.id) ? (
+                <Loader className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                copyVideoUrl(video.id);
+              }}
+              className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white shadow-[0_8px_25px_rgba(16,185,129,0.4)] hover:shadow-[0_8px_35px_rgba(16,185,129,0.6)] transition-all duration-300 hover:scale-110"
+              title="영상 URL 복사"
+            >
+              {copiedUrls.has(video.id) ? (
+                <Check className="w-4 h-4 text-green-300" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleVideoDownload();
+              }}
+              disabled={downloadingVideo}
+              className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white shadow-[0_8px_25px_rgba(139,92,246,0.4)] hover:shadow-[0_8px_35px_rgba(139,92,246,0.6)] transition-all duration-300 hover:scale-110 disabled:opacity-50"
+              title="영상 다운로드 (720p)"
+            >
+              {downloadingVideo ? (
+                <Loader className="w-4 h-4 animate-spin" />
+              ) : downloadCompleted ? (
+                <Check className="w-4 h-4 text-green-300" />
+              ) : (
+                <Link className="w-4 h-4" />
+              )}
+            </button>
+            
+            <button
+              onClick={() => toggleFavorite(video)}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+                isFavorite
+                  ? 'bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-[0_8px_25px_rgba(244,63,94,0.4)] hover:shadow-[0_8px_35px_rgba(244,63,94,0.6)]'
+                  : 'bg-gradient-to-br from-gray-600 to-gray-700 text-gray-300 hover:text-white shadow-[0_8px_25px_rgba(75,85,99,0.4)] hover:shadow-[0_8px_35px_rgba(75,85,99,0.6)]'
+              }`}
+            >
+              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+            </button>
+          </div>
+        </div>
+        
+        {/* Ultra Modern Content Section - 오른쪽 */}
+        <div className="flex-1 space-y-3">
+          {/* Glowing Title */}
+          <h3 className="text-lg font-black text-white leading-tight group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 group-hover:bg-clip-text transition-all duration-500 line-clamp-2">
+            {video.title}
+          </h3>
+          
+          {/* Channel & Date Info */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center">
+                <Users className="w-3 h-3 text-white" />
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => toggleFavorite(video)}
-                  className={`p-2 sm:p-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${
-                    isFavorite
-                      ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isFavorite ? 'fill-current' : ''}`} />
-                </button>
-                <a
-                  href={`https://youtube.com/watch?v=${video.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-shrink-0 p-2 sm:p-3 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl sm:rounded-2xl hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  <Play className="w-4 h-4 sm:w-5 sm:h-5" />
-                </a>
-              </div>
+              <span className="text-gray-300 font-medium text-sm">{video.channelTitle}</span>
             </div>
             
-            {/* 통계 */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-blue-200/50">
-                <div className="flex items-center gap-2 mb-1">
-                  <Eye className="w-4 h-4 text-blue-600" />
-                  <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">조회수</span>
+            <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${getDateColorClass(video.publishedAt)} text-white shadow-lg`}>
+              <Clock className="w-3 h-3 mr-1" />
+              {getTimeAgo(video.publishedAt)}
+            </div>
+          </div>
+          
+          {/* Futuristic Stats Grid */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="neo-glass rounded-lg p-2 hover:scale-105 transition-all duration-300">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-5 h-5 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-md flex items-center justify-center">
+                  <Eye className="w-3 h-3 text-white" />
                 </div>
-                <p className="text-base sm:text-lg font-bold text-blue-900">{formatNumber(video.viewCount)}</p>
+                <p className="text-xs font-bold text-cyan-300 uppercase tracking-wider">조회수</p>
               </div>
-              
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-purple-200/50">
-                <div className="flex items-center gap-2 mb-1">
-                  <Users className="w-4 h-4 text-purple-600" />
-                  <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">구독자</span>
-                </div>
-                <p className="text-base sm:text-lg font-bold text-purple-900">{formatNumber(video.subscriberCount)}</p>
-              </div>
-              
-              <div className={`bg-gradient-to-br ${getPerformanceColor(video.performanceScore).bg} rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-lg sm:col-span-1 col-span-1`}>
-                <div className="flex items-center gap-2 mb-1">
-                  <Zap className="w-4 h-4 text-white" />
-                  <span className="text-xs font-semibold text-white/90 uppercase tracking-wide">성과율</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <p className="text-base sm:text-lg font-bold text-white">
-                    {video.performanceScore.toFixed(1)}%
-                  </p>
-                  <span className="text-base sm:text-lg">
-                    {getPerformanceColor(video.performanceScore).icon}
-                  </span>
+              <p className="text-sm font-black text-white">{formatNumber(video.viewCount)}</p>
+            </div>
+            
+            <div className="neo-glass rounded-2xl p-4 hover:scale-105 transition-all duration-300">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-600 rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4 text-white" />
                 </div>
               </div>
+              <p className="text-xs font-bold text-purple-300 uppercase tracking-wider mb-1">구독자</p>
+              <p className="text-lg font-black text-white">{formatNumber(video.subscriberCount)}</p>
             </div>
           </div>
         </div>

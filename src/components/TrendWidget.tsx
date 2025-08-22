@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { TrendingUp, ChevronDown, Loader, X, BarChart3, Flame, Eye } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { TrendingUp, ChevronDown, Loader, X, BarChart3, Flame, Eye, Grid, Maximize2, Minimize2 } from 'lucide-react';
 import { cache, cacheKeys } from '@/lib/cache';
 
 interface Trend {
@@ -15,9 +15,11 @@ interface TrendWidgetProps {
   variant: 'sidebar';
   apiKey: string;
   onSearchTrend?: (keyword: string) => void;
+  cardScale: number;
+  setCardScale: (scale: number) => void;
 }
 
-export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWidgetProps) {
+export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale, setCardScale }: TrendWidgetProps) {
   const [selectedCountry, setSelectedCountry] = useState('KR');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
@@ -27,6 +29,54 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // 사이즈 슬라이더 관련 state
+  const [isSliderVisible, setIsSliderVisible] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  
+  // 사이즈 슬라이더 함수들
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true);
+    updateScale(e);
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      updateScale(e);
+    }
+  }, [isDragging]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const updateScale = (e: MouseEvent | React.MouseEvent) => {
+    if (!sliderRef.current) return;
+
+    const rect = sliderRef.current.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const percentage = Math.max(0, Math.min(1, 1 - (y / rect.height)));
+    const newScale = 0.7 + (percentage * 0.6); // 0.7 to 1.3
+    setCardScale(Number(newScale.toFixed(2)));
+  };
+
+  const getSliderPosition = () => {
+    const percentage = (cardScale - 0.7) / 0.6;
+    return `${(1 - percentage) * 100}%`;
+  };
+
+  // Mouse event listeners for slider
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
   const [trends, setTrends] = useState<Trend[]>([
     { title: '게임 리뷰', views: '1.2M', growth: '+23%', category: '게임' },
     { title: '먹방 챌린지', views: '890K', growth: '+18%', category: '푸드' },
@@ -293,17 +343,18 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
     return (
       <div 
         className="fixed right-0 top-20 h-[calc(100vh-5rem)] z-40"
+        style={{ transform: 'scale(var(--scale-factor))', transformOrigin: 'right top' }}
       >
         <div className="relative h-full">
           {/* 사이드바 힌트 탭 - 항상 보이는 부분 */}
           <div 
-            className="absolute right-0 top-20 bg-gradient-to-l from-purple-500 to-purple-600 text-white px-3 py-8 rounded-l-xl shadow-lg hover:bg-gradient-to-l hover:from-purple-600 hover:to-purple-700 transition-all duration-300 cursor-pointer"
+            className="absolute -right-2 top-16 bg-gradient-to-l from-purple-500 to-purple-600 text-white px-2 py-6 rounded-l-xl shadow-[0_8px_25px_rgba(139,92,246,0.4)] hover:shadow-[0_8px_35px_rgba(139,92,246,0.6)] hover:bg-gradient-to-l hover:from-purple-600 hover:to-purple-700 transition-all duration-300 cursor-pointer card-3d"
             onMouseEnter={handleSidebarMouseEnter}
             onMouseLeave={handleSidebarMouseLeave}
           >
             <div className="flex flex-col items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              <div className="writing-mode-vertical text-sm font-bold tracking-wider" style={{writingMode: 'vertical-rl'}}>
+              <TrendingUp className="w-4 h-4" />
+              <div className="writing-mode-vertical text-xs font-black tracking-wider" style={{writingMode: 'vertical-rl'}}>
                 트렌드
               </div>
               <div className={`w-2 h-2 rounded-full animate-pulse ${
@@ -314,19 +365,80 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
             </div>
           </div>
           
+          {/* 사이즈 슬라이더 힌트 탭 */}
+          <div 
+            className="absolute -right-2 top-64 bg-gradient-to-l from-emerald-500 to-blue-600 text-white px-2 py-6 rounded-l-xl shadow-[0_8px_25px_rgba(16,185,129,0.4)] hover:shadow-[0_8px_35px_rgba(16,185,129,0.6)] transition-all duration-300 cursor-pointer card-3d"
+            onMouseEnter={() => setIsSliderVisible(true)}
+            onMouseLeave={() => setIsSliderVisible(false)}
+          >
+            <div className="flex flex-col items-center gap-2">
+              <Grid className="w-4 h-4" />
+              <div className="writing-mode-vertical text-xs font-black tracking-wider" style={{writingMode: 'vertical-rl'}}>
+                사이즈
+              </div>
+            </div>
+          </div>
+          
+          {/* 사이즈 슬라이더 */}
+          <div
+            className={`absolute -right-12 top-56 w-12 h-80 transition-all duration-300 ${
+              isSliderVisible ? 'translate-x-0 opacity-100' : 'translate-x-20 opacity-0'
+            }`}
+            onMouseEnter={() => setIsSliderVisible(true)}
+            onMouseLeave={() => setIsSliderVisible(false)}
+          >
+            <div className="relative w-full h-full neo-glass holographic-effect rounded-2xl border border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-3">
+              {/* Cyberpunk Border Animation */}
+              <div className="absolute inset-0 rounded-2xl morphing-gradient opacity-20"></div>
+              
+              <div className="relative z-10 h-full flex flex-col items-center">
+                {/* 상단 아이콘 */}
+                <Maximize2 className="w-4 h-4 text-emerald-400 mb-2" />
+                
+                {/* 슬라이더 트랙 */}
+                <div 
+                  ref={sliderRef}
+                  className="flex-1 w-2 bg-gray-600/30 rounded-full relative cursor-pointer"
+                  onMouseDown={handleMouseDown}
+                >
+                  {/* 슬라이더 그라디언트 배경 */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-500 to-blue-500 rounded-full opacity-30"></div>
+                  
+                  {/* 슬라이더 핸들 */}
+                  <div
+                    className="absolute w-6 h-6 bg-gradient-to-br from-emerald-400 to-blue-600 rounded-full shadow-[0_4px_15px_rgba(16,185,129,0.6)] border-2 border-white/20 transform -translate-x-2 -translate-y-3 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform duration-200"
+                    style={{ top: getSliderPosition() }}
+                  >
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-300 to-blue-500 animate-pulse"></div>
+                  </div>
+                </div>
+                
+                {/* 하단 아이콘 */}
+                <Minimize2 className="w-4 h-4 text-emerald-400 mt-2" />
+                
+                {/* 스케일 표시 */}
+                <div className="mt-3 px-2 py-1 bg-gray-800/80 rounded-lg border border-emerald-400/30">
+                  <span className="text-xs font-bold text-emerald-300">
+                    {Math.round(cardScale * 100)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           {/* 사이드바 */}
-          <div className={`absolute right-0 top-0 w-96 h-full bg-white/95 backdrop-blur-xl border-l border-gray-200 shadow-2xl transform transition-transform duration-300 ease-out ${
+          <div className={`absolute right-0 top-0 w-96 h-full neo-glass border-l border-blue-400/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)] transform transition-transform duration-300 ease-out ${
             isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
             onMouseEnter={handleSidebarMouseEnter}
             onMouseLeave={handleSidebarMouseLeave}
           >
-            <div className="p-6 h-full overflow-y-auto">
+            <div className="p-4 h-full overflow-y-auto">
               {/* 헤더 */}
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <BarChart3 className="w-6 h-6 text-purple-600" />
-                  <h3 className="text-xl font-bold text-gray-900">글로벌 트렌드</h3>
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 className="w-5 h-5 text-purple-400" />
+                  <h3 className="text-lg font-black text-white">글로벌 트렌드</h3>
                 </div>
                 <div className="text-xs text-gray-500 flex items-center gap-2">
                   {isLoading ? (
@@ -371,12 +483,12 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
                   </button>
                   
                   {isCountryDropdownOpen && (
-                    <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-10 max-h-60 overflow-y-auto">
+                    <div className="absolute top-full mt-2 left-0 right-0 bg-gray-800 border border-gray-600 rounded-xl shadow-lg py-2 z-10 max-h-60 overflow-y-auto">
                       {countries.map((country) => (
                         <button
                           key={country.code}
                           onClick={() => handleCountryChange(country.code)}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                          className="w-full text-left px-4 py-3 hover:bg-gray-700 text-white flex items-center gap-3 transition-colors"
                         >
                           <span className="text-lg">{country.flag}</span>
                           <span className="font-medium">{country.name}</span>
@@ -408,12 +520,12 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
                   </button>
                   
                   {isCategoryDropdownOpen && (
-                    <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-10 max-h-60 overflow-y-auto">
+                    <div className="absolute top-full mt-2 left-0 right-0 bg-gray-800 border border-gray-600 rounded-xl shadow-lg py-2 z-10 max-h-60 overflow-y-auto">
                       {categories.map((category) => (
                         <button
                           key={category.id}
                           onClick={() => handleCategoryChange(category.id)}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                          className="w-full text-left px-4 py-3 hover:bg-gray-700 text-white flex items-center gap-3 transition-colors"
                         >
                           <span className="text-lg">{category.icon}</span>
                           <span className="font-medium">{category.name}</span>
@@ -426,7 +538,7 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
               
               {/* 트렌드 리스트 */}
               <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <h4 className="text-lg font-semibold text-white flex items-center gap-2">
                   <Flame className="w-5 h-5 text-orange-500" />
                   인기 급상승
                 </h4>
@@ -451,7 +563,7 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend }: TrendWid
                             {index + 1}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-semibold text-gray-900 group-hover/item:text-blue-700 transition-colors text-sm leading-tight" title={trend.title}>
+                            <h5 className="font-semibold text-white group-hover/item:text-blue-300 transition-colors text-sm leading-tight" title={trend.title}>
                               {trend.title.length > 35 ? `${trend.title.substring(0, 35)}...` : trend.title}
                             </h5>
                             <div className="mt-1 flex items-center gap-1 text-xs flex-wrap">

@@ -41,20 +41,20 @@ export default function ChannelAnalysis({
     return (
       <div className="text-center py-20">
         <BarChart3 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-        <h3 className="text-xl font-bold text-gray-900">채널을 선택하여 분석을 시작하세요.</h3>
-        <p className="text-gray-600">채널 찾기 탭에서 채널을 검색하고 분석 버튼을 클릭하세요.</p>
+        <h3 className="text-xl font-bold text-white">채널을 선택하여 분석을 시작하세요.</h3>
+        <p className="text-gray-300">채널 찾기 탭에서 채널을 검색하고 분석 버튼을 클릭하세요.</p>
       </div>
     );
   }
 
   return (
     <div>
-      <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-gray-200/50 shadow-lg p-6 mb-8">
+      <div className="neo-glass holographic-effect rounded-2xl border border-blue-400/30 shadow-lg p-6 mb-8">
         <div className="flex items-center gap-4">
           <img src={selectedChannelData.thumbnail} alt={selectedChannelData.title} className="w-24 h-24 rounded-full" />
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">{selectedChannelData.title}</h2>
-            <p className="text-gray-600">{selectedChannelData.description}</p>
+            <h2 className="text-2xl font-bold text-white">{selectedChannelData.title}</h2>
+            <p className="text-gray-300">{selectedChannelData.description}</p>
           </div>
         </div>
       </div>

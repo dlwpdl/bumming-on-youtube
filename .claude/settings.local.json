@@ -11,9 +11,15 @@
       "WebFetch(domain:strangewolfstudios.com)",
       "Bash(git config:*)",
       "Bash(git fetch:*)",
-      "Bash(security delete-internet-password:*)"
+      "Bash(security delete-internet-password:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run build:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "/Users/eliot/Desktop/유/bumming-on-youtube"
+    ]
   }
 }
