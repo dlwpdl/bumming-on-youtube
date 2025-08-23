@@ -702,7 +702,6 @@ export default function Home() {
     getTimeAgo,
     getDateColorClass,
     getPerformanceColor,
-    cardScale,
   };
 
   return (
