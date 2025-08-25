@@ -17,7 +17,10 @@
       "Bash(pkill:*)",
       "Bash(npm run dev:*)",
       "Bash(kill:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(git branch:*)",
+      "Bash(npm run dev:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": [],

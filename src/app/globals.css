@@ -84,6 +84,14 @@
 }
 
 /* Global Styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  pointer-events: auto !important;
+}
+
 body {
   background: var(--background-primary);
   color: var(--text-primary);
@@ -92,6 +100,16 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  pointer-events: auto !important;
+  user-select: auto;
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
+}
+
+button, input, select, textarea {
+  pointer-events: auto !important;
+  user-select: auto;
 }
 
 /* Clean Single Color Classes */
@@ -259,7 +277,7 @@ body {
   bottom: 0;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
   animation: holographic-shine 3s ease-in-out infinite;
-  z-index: 1;
+  z-index: -1;
   pointer-events: none;
 }
 
@@ -360,8 +378,8 @@ body {
 
 /* Apply responsive scaling to main components */
 .main-content {
-  transform: scale(var(--scale-factor));
-  transform-origin: center top;
+  /* transform: scale(var(--scale-factor)); */
+  /* transform-origin: center top; */
 }
 
 /* Responsive card sizing */

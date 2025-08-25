@@ -19,6 +19,7 @@ class LocalCache {
   private readonly PREFIX = 'yt-cache-';
   private readonly defaultTTL = 300; // 5 minutes
   private readonly maxSize = 100;
+  private memoryCache: Map<string, CacheItem<any>> = new Map();
 
   private constructor() {}
 
@@ -30,11 +31,9 @@ class LocalCache {
   }
 
   /**
-   * 캐시에 데이터 저장
+   * 캐시에 데이터 저장 (메모리 + localStorage 하이브리드)
    */
   set<T>(key: string, data: T, options: CacheOptions = {}): void {
-    if (typeof window === 'undefined') return;
-
     const ttl = options.ttl || this.defaultTTL;
     const now = Date.now();
     
@@ -44,29 +43,56 @@ class LocalCache {
       expiresAt: now + (ttl * 1000)
     };
 
-    try {
-      const cacheKey = this.PREFIX + key;
-      localStorage.setItem(cacheKey, JSON.stringify(cacheItem));
-      
-      // 캐시 크기 관리
-      this.cleanupExpiredItems();
-      this.enforceMaxSize();
-    } catch (error) {
-      console.warn('캐시 저장 실패:', error);
-      // localStorage가 가득 찬 경우 오래된 항목 정리
-      this.cleanupExpiredItems();
+    // 메모리 캐시에 저장 (빠른 접근)
+    this.memoryCache.set(key, cacheItem);
+
+    // localStorage에도 저장 (지속성)
+    if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem(this.PREFIX + key, JSON.stringify(cacheItem));
-      } catch (retryError) {
-        console.error('캐시 저장 재시도 실패:', retryError);
+        const cacheKey = this.PREFIX + key;
+        localStorage.setItem(cacheKey, JSON.stringify(cacheItem));
+        
+        // 캐시 크기 관리
+        this.cleanupExpiredItems();
+        this.enforceMaxSize();
+      } catch (error) {
+        console.warn('localStorage 저장 실패:', error);
+        // localStorage가 가득 찬 경우 오래된 항목 정리
+        this.cleanupExpiredItems();
+        try {
+          localStorage.setItem(this.PREFIX + key, JSON.stringify(cacheItem));
+        } catch (retryError) {
+          console.error('캐시 저장 재시도 실패:', retryError);
+        }
+      }
+    }
+
+    // 메모리 캐시 크기 관리
+    if (this.memoryCache.size > this.maxSize) {
+      const oldestKey = this.memoryCache.keys().next().value;
+      if (oldestKey) {
+        this.memoryCache.delete(oldestKey);
       }
     }
   }
 
   /**
-   * 캐시에서 데이터 조회
+   * 캐시에서 데이터 조회 (메모리 우선, localStorage 보조)
    */
   get<T>(key: string): T | null {
+    const now = Date.now();
+
+    // 메모리 캐시에서 먼저 확인
+    const memoryCacheItem = this.memoryCache.get(key);
+    if (memoryCacheItem) {
+      if (now < memoryCacheItem.expiresAt) {
+        return memoryCacheItem.data;
+      } else {
+        this.memoryCache.delete(key);
+      }
+    }
+
+    // localStorage에서 확인
     if (typeof window === 'undefined') return null;
 
     try {
@@ -76,13 +102,15 @@ class LocalCache {
       if (!cached) return null;
 
       const cacheItem: CacheItem<T> = JSON.parse(cached);
-      const now = Date.now();
 
       // 만료 확인
       if (now > cacheItem.expiresAt) {
         localStorage.removeItem(cacheKey);
         return null;
       }
+
+      // 메모리 캐시에도 저장 (다음 접근 시 더 빠르게)
+      this.memoryCache.set(key, cacheItem);
 
       return cacheItem.data;
     } catch (error) {

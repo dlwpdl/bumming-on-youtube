@@ -1,7 +1,7 @@
 
 import { Play, Clock, Eye, Users, Zap, Heart, Download, Copy, Check, Link, Loader, ChevronDown, Info, Subtitles } from 'lucide-react';
 import { VideoData } from '@/lib/youtube';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo, useCallback } from 'react';
 
 interface VideoCardProps {
   video: VideoData;
@@ -20,7 +20,7 @@ interface VideoCardProps {
   cardScale?: number;
 }
 
-export default function VideoCard({ 
+const VideoCard = memo(function VideoCard({ 
   video, 
   isFavorite, 
   toggleFavorite, 
@@ -42,7 +42,7 @@ export default function VideoCard({
   // 스케일 보정 계산
   const textScale = Math.max(0.8, Math.min(1.2, 1 / cardScale));
   
-  const handleVideoDownload = async () => {
+  const handleVideoDownload = useCallback(async () => {
     setDownloadingVideo(true);
     try {
       const response = await fetch('/api/download', {
@@ -69,15 +69,15 @@ export default function VideoCard({
     } finally {
       setDownloadingVideo(false);
     }
-  };
+  }, [video.id, video.title]);
   return (
     <div className="group relative neo-glass holographic-effect card-3d rounded-3xl overflow-hidden">
       {/* Cyberpunk Border Animation */}
       <div className="absolute inset-0 rounded-3xl morphing-gradient opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
       
-      <div className="relative z-10 p-4 flex gap-4 min-h-[220px]" style={{ fontSize: `${textScale}rem` }}>
+      <div className="relative z-10 p-4 mobile:p-2 flex mobile:flex-col gap-4 mobile:gap-2 min-h-[220px] mobile:min-h-auto" style={{ fontSize: `${textScale}rem` }}>
         {/* Thumbnail Section - 왼쪽 */}
-        <div className="relative flex-shrink-0 w-56 space-y-3">
+        <div className="relative flex-shrink-0 w-56 mobile:w-full space-y-3 mobile:space-y-2">
           <div className="relative overflow-hidden rounded-2xl group-hover:scale-105 transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <img
               src={video.thumbnail}
@@ -101,7 +101,7 @@ export default function VideoCard({
           </div>
           
           {/* Action Buttons - 썸네일 아래로 이동 */}
-          <div className="flex gap-2 justify-center">
+          <div className="flex gap-2 mobile:gap-1 justify-center mobile:flex-wrap">
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -240,4 +240,6 @@ export default function VideoCard({
       </div>
     </div>
   );
-}
+});
+
+export default VideoCard;

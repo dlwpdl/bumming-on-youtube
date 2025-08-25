@@ -29,7 +29,7 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   
   // 사이즈 슬라이더 관련 state
   const [isSliderVisible, setIsSliderVisible] = useState(false);
@@ -351,7 +351,7 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
             right: isSidebarVisible ? '384px' : '0px',
             top: '50vh',
             transform: 'translateY(-50%)',
-            zIndex: 10001,
+            zIndex: 1001,
           }}
           title={isSidebarVisible ? "트렌드 사이드바 숨기기" : "트렌드 사이드바 보기"}
         >
@@ -366,14 +366,14 @@ export default function TrendWidget({ variant, apiKey, onSearchTrend, cardScale,
         {/* 사이드바 */}
         {isSidebarVisible && (
           <div 
-            className="bg-gray-900/95 border-l border-blue-400/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl"
+            className="bg-gray-900/95 border-l border-blue-400/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl mobile:w-full mobile:left-0"
             style={{ 
               position: 'fixed',
               right: '0px',
               top: '0',
-              width: 'min(384px, 25vw)',
+              width: 'min(384px, 100vw)',
               height: '100vh',
-              zIndex: 10000,
+              zIndex: 1000,
               pointerEvents: 'auto',
             }}
           >

@@ -25,6 +25,18 @@ const config: Config = {
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
       },
+      screens: {
+        'xs': '475px',
+        'mobile': { 'max': '640px' },
+        'tablet': { 'min': '641px', 'max': '1024px' },
+        'desktop': { 'min': '1025px' },
+      },
+      spacing: {
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
+      },
     },
   },
   plugins: [

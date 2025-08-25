@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { VideoData } from '@/lib/youtube';
-import { SortField, SortOrder, TabType, ChannelData, FavoriteVideo } from '@/lib/types';
+import { SortField, SortOrder, TabType, ChannelData, FavoriteVideo, FavoriteChannel } from '@/lib/types';
 import { apiKeyStorage, apiKeyUsage } from '@/lib/env';
 import { cache, cacheKeys, withCache } from '@/lib/cache';
 
@@ -14,6 +14,7 @@ import FilterSection from '@/components/FilterSection';
 import VideoList from '@/components/VideoList';
 import ChannelList from '@/components/ChannelList';
 import ChannelAnalysis from '@/components/ChannelAnalysis';
+import AdvancedChannelAnalysis from '@/components/AdvancedChannelAnalysis';
 import Favorites from '@/components/Favorites';
 import ApiKeyModal from '@/components/ApiKeyModal';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
@@ -21,6 +22,7 @@ import ErrorMessage from '@/components/ErrorMessage';
 import EmptyState from '@/components/EmptyState';
 import KakaoAd from '@/components/KakaoAd';
 import TrendWidget from '@/components/TrendWidget';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export type ViewSize = 'small' | 'medium' | 'large';
 
@@ -39,6 +41,7 @@ export default function Home() {
   const [channelVideos, setChannelVideos] = useState<VideoData[]>([]);
   const [sortedChannelVideos, setSortedChannelVideos] = useState<VideoData[]>([]);
   const [favoriteVideos, setFavoriteVideos] = useState<FavoriteVideo[]>([]);
+  const [favoriteChannels, setFavoriteChannels] = useState<FavoriteChannel[]>([]);
   const [loadingChannelAnalysis, setLoadingChannelAnalysis] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
@@ -91,6 +94,15 @@ export default function Home() {
         setFavoriteVideos(JSON.parse(savedFavorites));
       } catch (error) {
         console.error('즐겨찾기 로드 오류:', error);
+      }
+    }
+
+    const savedFavoriteChannels = localStorage.getItem('favorite-channels');
+    if (savedFavoriteChannels) {
+      try {
+        setFavoriteChannels(JSON.parse(savedFavoriteChannels));
+      } catch (error) {
+        console.error('채널 즐겨찾기 로드 오류:', error);
       }
     }
   }, []);
@@ -149,6 +161,35 @@ export default function Home() {
       removeFromFavorites(video.id);
     } else {
       addToFavorites(video);
+    }
+  };
+
+  const addToChannelFavorites = (channel: ChannelData) => {
+    const favoriteChannel: FavoriteChannel = {
+      ...channel,
+      savedAt: new Date().toISOString(),
+    };
+    
+    const newFavorites = [favoriteChannel, ...favoriteChannels.filter(fav => fav.id !== channel.id)];
+    setFavoriteChannels(newFavorites);
+    localStorage.setItem('favorite-channels', JSON.stringify(newFavorites));
+  };
+
+  const removeFromChannelFavorites = (channelId: string) => {
+    const newFavorites = favoriteChannels.filter(fav => fav.id !== channelId);
+    setFavoriteChannels(newFavorites);
+    localStorage.setItem('favorite-channels', JSON.stringify(newFavorites));
+  };
+
+  const isChannelFavorite = (channelId: string) => {
+    return favoriteChannels.some(fav => fav.id === channelId);
+  };
+
+  const toggleChannelFavorite = (channel: FavoriteChannel) => {
+    if (isChannelFavorite(channel.id)) {
+      removeFromChannelFavorites(channel.id);
+    } else {
+      addToChannelFavorites(channel);
     }
   };
 
@@ -705,7 +746,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 relative overflow-hidden">
+    <ErrorBoundary>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 relative">
       {/* Subtle Dark Background Decoration */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600 rounded-full blur-3xl opacity-5 float-animation"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-600 rounded-full blur-3xl opacity-5 float-animation" style={{animationDelay: '3s'}}></div>
@@ -717,18 +759,22 @@ export default function Home() {
         <div className="w-full">
             <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} selectedChannelId={selectedChannelId} />
 
-            <SearchSection 
-              activeTab={activeTab} 
-              currentSearchQuery={currentSearchQuery} 
-              setCurrentSearchQuery={setCurrentSearchQuery} 
-              handleSearch={() => handleSearch()} 
-              loading={loading} 
-              apiKey={apiKey} 
-            />
+            {activeTab !== 'channel-analysis' && (
+              <>
+                <SearchSection 
+                  activeTab={activeTab} 
+                  currentSearchQuery={currentSearchQuery} 
+                  setCurrentSearchQuery={setCurrentSearchQuery} 
+                  handleSearch={() => handleSearch()} 
+                  loading={loading} 
+                  apiKey={apiKey} 
+                />
 
-            <FilterSection activeTab={activeTab} filters={filters} setFilters={setFilters} />
+                <FilterSection activeTab={activeTab} filters={filters} setFilters={setFilters} />
 
-            <ErrorMessage error={error} />
+                <ErrorMessage error={error} />
+              </>
+            )}
 
             {activeTab === 'videos' && sortedVideos.length > 0 && (
               <VideoList 
@@ -749,33 +795,8 @@ export default function Home() {
               />
             )}
 
-            {activeTab === 'channels' && sortedChannels.length > 0 && (
-              <ChannelList 
-                sortedChannels={sortedChannels} 
-                currentPage={currentPage} 
-                totalResults={totalResults} 
-                filters={filters} 
-                sortField={sortField} 
-                sortOrder={sortOrder} 
-                handleSort={handleSort} 
-                nextPageToken={nextPageToken} 
-                handlePrevPage={() => handlePrevPage()} 
-                handleNextPage={() => handleNextPage()} 
-                loadingPage={loadingPage} 
-                viewSize={viewSize}
-                cardScale={cardScale}
-                selectedChannelId={selectedChannelId}
-                setSelectedChannelId={setSelectedChannelId}
-                loadChannelAnalysis={loadChannelAnalysis}
-                setActiveTab={setActiveTab}
-                formatNumber={formatNumber}
-              />
-            )}
 
-            {!loading && !error && 
-             ((activeTab === 'videos' && videos.length === 0) || 
-              (activeTab === 'channels' && channels.length === 0)) && 
-             currentSearchQuery && (
+            {!loading && !error && activeTab === 'videos' && videos.length === 0 && currentSearchQuery && (
               <EmptyState />
             )}
 
@@ -788,8 +809,36 @@ export default function Home() {
               />
             )}
 
+            {activeTab === 'channel-analysis' && (
+              <AdvancedChannelAnalysis 
+                apiKey={apiKey} 
+                onSearchChannelVideos={(channelTitle) => {
+                  setVideoSearchQuery(channelTitle);
+                  setActiveTab('videos');
+                  
+                  // 잠시 후 검색 실행
+                  setTimeout(() => {
+                    handleSearch();
+                  }, 100);
+                }}
+              />
+            )}
+
             {activeTab === 'favorites' && (
-              <Favorites favoriteVideos={favoriteVideos} {...videoCardProps} />
+              <Favorites 
+              favoriteVideos={favoriteVideos}
+              favoriteChannels={favoriteChannels}
+              isChannelFavorite={isChannelFavorite}
+              toggleChannelFavorite={toggleChannelFavorite}
+              onSearchChannelVideos={(channelTitle) => {
+                setVideoSearchQuery(channelTitle);
+                setActiveTab('videos');
+                setTimeout(() => {
+                  handleSearch();
+                }, 100);
+              }}
+              {...videoCardProps} 
+            />
             )}
 
             <KakaoAd 
@@ -884,5 +933,6 @@ export default function Home() {
         }} 
       />
     </div>
+    </ErrorBoundary>
   );
 }
