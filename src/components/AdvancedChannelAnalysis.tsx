@@ -48,8 +48,9 @@ export default function AdvancedChannelAnalysis({
 
   // 새로운 필터 상태들
   const [gradeFilter, setGradeFilter] = useState<ChannelGrade[]>([]);
-  const [tableSize, setTableSize] = useState<'compact' | 'normal' | 'spacious'>('normal');
+  const [tableSize, setTableSize] = useState<'compact' | 'normal' | 'spacious'>('compact');
   const [maxChannelsPerPage, setMaxChannelsPerPage] = useState(50);
+  const [totalFetchedChannels, setTotalFetchedChannels] = useState(0);
 
   const handleSearch = async (pageToken?: string) => {
     if (!searchQuery.trim()) {
@@ -100,7 +101,13 @@ export default function AdvancedChannelAnalysis({
           return enhanceChannelData(channel);
         });
         
-        setChannels(enhancedChannels);
+        if (isFirstSearch) {
+          setChannels(enhancedChannels);
+          setTotalFetchedChannels(enhancedChannels.length);
+        } else {
+          setChannels(prev => [...prev, ...enhancedChannels]);
+          setTotalFetchedChannels(prev => prev + enhancedChannels.length);
+        }
         setNextPageToken(data.nextPageToken);
         setTotalResults(data.totalResults || 0);
 
@@ -118,6 +125,52 @@ export default function AdvancedChannelAnalysis({
     } finally {
       setLoading(false);
     }
+  };
+
+  // 페이지 크기 변경 시 추가 데이터 로드
+  const handlePageSizeChange = async (newSize: number) => {
+    const currentSize = channels.length;
+    if (newSize > currentSize && nextPageToken) {
+      const needMoreChannels = newSize - currentSize;
+      const additionalBatches = Math.ceil(needMoreChannels / 50);
+      
+      let currentToken = nextPageToken;
+      for (let i = 0; i < additionalBatches && currentToken; i++) {
+        try {
+          const response = await fetch('/api/search-channels', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: searchQuery,
+              country: countryFilter,
+              minSubscribers,
+              maxSubscribers,
+              maxResults: '50',
+              pageToken: currentToken,
+              apiKey,
+            }),
+          });
+
+          const data = await response.json();
+          if (response.ok && data.channels?.length > 0) {
+            const enhancedChannels = data.channels.map((channel: any) => enhanceChannelData(channel));
+            setChannels(prev => [...prev, ...enhancedChannels]);
+            setTotalFetchedChannels(prev => prev + enhancedChannels.length);
+            currentToken = data.nextPageToken;
+          } else {
+            break;
+          }
+        } catch (error) {
+          console.error('Error fetching additional channels:', error);
+          break;
+        }
+      }
+      setNextPageToken(currentToken);
+    }
+    setMaxChannelsPerPage(newSize);
+    setCurrentPage(1);
   };
 
   const handleSort = (field: ChannelSortField) => {
@@ -329,27 +382,12 @@ export default function AdvancedChannelAnalysis({
               )}
             </div>
             
-            {/* 테이블 크기 조절 */}
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
-              <span className="text-sm font-medium text-gray-300">행 크기:</span>
-              <select
-                value={tableSize}
-                onChange={(e) => setTableSize(e.target.value as any)}
-                className="bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1 text-sm font-medium focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-              >
-                <option value="compact">좁음</option>
-                <option value="normal">보통</option>
-                <option value="spacious">넓음</option>
-              </select>
-            </div>
-            
             {/* 페이지당 결과 수 */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-300">페이지당:</span>
               <select
                 value={maxChannelsPerPage}
-                onChange={(e) => setMaxChannelsPerPage(parseInt(e.target.value))}
+                onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
                 className="bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1 text-sm font-medium focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
               >
                 <option value="25">25개</option>
@@ -358,6 +396,34 @@ export default function AdvancedChannelAnalysis({
                 <option value="200">200개</option>
                 <option value="300">300개</option>
               </select>
+            </div>
+            
+            {/* 테이블 크기 조절 슬라이더 */}
+            <div className="flex items-center gap-3">
+              <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
+              <span className="text-sm font-medium text-gray-300">테이블 크기:</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">좁음</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="2"
+                  value={tableSize === 'compact' ? 0 : tableSize === 'normal' ? 1 : 2}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setTableSize(value === 0 ? 'compact' : value === 1 ? 'normal' : 'spacious');
+                  }}
+                  className="w-20 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <span className="text-xs text-gray-400">넓음</span>
+              </div>
+            </div>
+            
+            {/* 등급 기준 설명 */}
+            <div className="col-span-full">
+              <div className="text-xs text-gray-500 mt-2">
+                <strong>등급 기준:</strong> S(1천만+), A(500만+), B+(100만+), B(50만+), B-(10만+), C+(5만+), C(1만+), C-(5천+), D+(1천+), D(1천 미만)
+              </div>
             </div>
           </div>
         </div>

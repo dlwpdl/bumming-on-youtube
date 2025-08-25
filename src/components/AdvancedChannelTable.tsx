@@ -79,6 +79,17 @@ export default function AdvancedChannelTable({
 
   const sizeClasses = getTableSizeClasses();
 
+  // 성장률 표시 함수
+  const formatGrowthRate = (rate: number) => {
+    const sign = rate >= 0 ? '+' : '';
+    const color = rate >= 0 ? 'text-green-400' : 'text-red-400';
+    return (
+      <span className={color}>
+        {sign}{formatNumber(rate)}
+      </span>
+    );
+  };
+
   if (loading) {
     return (
       <div className="neo-glass cyber-border rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.6)] overflow-hidden">
@@ -191,7 +202,7 @@ export default function AdvancedChannelTable({
               const gradeColors = getGradeColor(channel.grade);
               
               return (
-                <tr key={channel.id} className={`hover:bg-slate-700/30 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-400/5 group ${sizeClasses.minHeight}`}>
+                <tr key={channel.id} className={`hover:bg-slate-700/30 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-400/5 group ${sizeClasses.minHeight} relative`}>
                   <td className={`${sizeClasses.cellPadding} text-gray-300 font-medium`}>{index + 1}</td>
                   
                   <td className={`${sizeClasses.cellPadding}`}>
@@ -229,7 +240,7 @@ export default function AdvancedChannelTable({
                   
                   <td className={`${sizeClasses.cellPadding} min-w-48`}>
                     <div 
-                      className="flex items-center gap-3 cursor-pointer hover:text-cyan-400 group-hover:scale-105 transition-all duration-200 relative group"
+                      className="flex items-center gap-3 cursor-pointer hover:text-cyan-400 group-hover:scale-105 transition-all duration-200"
                       onClick={() => openChannelInNewTab(channel.id)}
                     >
                       <img 
@@ -241,23 +252,47 @@ export default function AdvancedChannelTable({
                         {channel.title}
                       </span>
                       <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-cyan-400 transition-colors duration-200" />
-                      
-                      {/* 상세 정보 툴팁 */}
-                      <div className="absolute left-0 top-full mt-2 bg-gray-900/95 border border-cyan-400/30 rounded-lg p-4 shadow-2xl z-50 min-w-[300px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 backdrop-blur-sm">
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2 font-bold text-cyan-400">
-                            <img src={channel.thumbnail} alt={channel.title} className="w-6 h-6 rounded-full" />
-                            {channel.title}
+                    </div>
+                  </td>
+                  
+                  {/* 전체 행에 대한 상세 정보 툴팁 */}
+                  <td className="absolute left-0 top-full mt-2 pointer-events-none z-50">
+                    <div className="bg-gray-800/98 border border-cyan-400/50 rounded-xl p-6 shadow-2xl min-w-[600px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 backdrop-blur-lg">
+                      <div className="grid grid-cols-2 gap-6 text-sm">
+                        {/* 왼쪽 컬럼 */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 font-bold text-cyan-400 text-base mb-4">
+                            <img src={channel.thumbnail} alt={channel.title} className="w-8 h-8 rounded-full" />
+                            <span className="truncate">{channel.title}</span>
                           </div>
-                          <div className="text-gray-300">
-                            <div><strong>설명:</strong> {channel.description?.slice(0, 100)}...</div>
-                            <div><strong>구독자:</strong> {formatNumber(channel.subscriberCount)}명</div>
-                            <div><strong>총 영상:</strong> {formatNumber(channel.videoCount)}개</div>
-                            <div><strong>총 조회수:</strong> {formatNumber(channel.viewCount)}회</div>
-                            <div><strong>평균 조회수:</strong> {formatNumber(channel.averageViews)}회</div>
-                            <div><strong>개설일:</strong> {formatDate(channel.publishedAt)}</div>
-                            <div><strong>운영 기간:</strong> {channel.growthData.operatingYears}년</div>
-                            <div><strong>국가:</strong> {getCountryFlag(channel.country)} {channel.country || 'N/A'}</div>
+                          <div className="text-gray-200">
+                            <div className="mb-2"><strong className="text-cyan-300">설명:</strong> <span className="text-gray-300">{channel.description?.slice(0, 120)}...</span></div>
+                            <div><strong className="text-cyan-300">구독자:</strong> <span className="text-white">{formatNumber(channel.subscriberCount)}명</span></div>
+                            <div><strong className="text-cyan-300">총 영상:</strong> <span className="text-white">{formatNumber(channel.videoCount)}개</span></div>
+                            <div><strong className="text-cyan-300">총 조회수:</strong> <span className="text-white">{formatNumber(channel.viewCount)}회</span></div>
+                            <div><strong className="text-cyan-300">평균 조회수:</strong> <span className="text-white">{formatNumber(channel.averageViews)}회</span></div>
+                            <div><strong className="text-cyan-300">개설일:</strong> <span className="text-white">{formatDate(channel.publishedAt)}</span></div>
+                            <div><strong className="text-cyan-300">운영 기간:</strong> <span className="text-white">{channel.growthData.operatingYears}년</span></div>
+                            <div><strong className="text-cyan-300">국가:</strong> <span className="text-white">{getCountryFlag(channel.country)} {channel.country || 'N/A'}</span></div>
+                          </div>
+                        </div>
+                        
+                        {/* 오른쪽 컬럼 - 성장 데이터 */}
+                        <div className="space-y-3">
+                          <div className="font-bold text-orange-400 text-base mb-4">📈 성장 분석</div>
+                          <div className="text-gray-200">
+                            <div><strong className="text-orange-300">연간 증가:</strong> {formatGrowthRate(channel.growthData.yearlyGrowth)}</div>
+                            <div><strong className="text-orange-300">월간 증가:</strong> {formatGrowthRate(channel.growthData.monthlyGrowth)}</div>
+                            <div><strong className="text-orange-300">일간 증가:</strong> {formatGrowthRate(channel.growthData.dailyGrowth)}</div>
+                            <div><strong className="text-purple-300">영상당 구독자:</strong> <span className="text-white">{formatNumber(channel.growthData.subscribersPerVideo)}</span></div>
+                            <div><strong className="text-purple-300">업로드 빈도:</strong> <span className="text-white">{formatUploadFrequency(channel.growthData.uploadFrequency)}</span></div>
+                            <div className="mt-3 pt-2 border-t border-gray-600">
+                              <div><strong className="text-cyan-300">등급:</strong> 
+                                <span className={`ml-2 px-2 py-1 rounded-lg text-sm font-bold ${getGradeColor(channel.grade).bg} ${getGradeColor(channel.grade).text} border ${getGradeColor(channel.grade).border}`}>
+                                  {channel.grade}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -278,16 +313,16 @@ export default function AdvancedChannelTable({
                     {formatNumber(channel.videoCount)}
                   </td>
                   
-                  <td className={`${sizeClasses.cellPadding} text-right font-bold bg-gradient-to-l from-orange-500/15 to-transparent ${getGrowthRateColor(channel.growthData.yearlyGrowth, channel.subscriberCount)}`}>
-                    {formatNumber(channel.growthData.yearlyGrowth)}
+                  <td className={`${sizeClasses.cellPadding} text-right font-bold bg-gradient-to-l from-orange-500/15 to-transparent`}>
+                    {formatGrowthRate(channel.growthData.yearlyGrowth)}
                   </td>
                   
-                  <td className={`${sizeClasses.cellPadding} text-right font-bold bg-gradient-to-l from-orange-500/15 to-transparent ${getGrowthRateColor(channel.growthData.monthlyGrowth, channel.subscriberCount)}`}>
-                    {formatNumber(channel.growthData.monthlyGrowth)}
+                  <td className={`${sizeClasses.cellPadding} text-right font-bold bg-gradient-to-l from-orange-500/15 to-transparent`}>
+                    {formatGrowthRate(channel.growthData.monthlyGrowth)}
                   </td>
                   
-                  <td className={`${sizeClasses.cellPadding} text-right font-bold bg-gradient-to-l from-orange-500/15 to-transparent ${getGrowthRateColor(channel.growthData.dailyGrowth, channel.subscriberCount)}`}>
-                    {formatNumber(channel.growthData.dailyGrowth)}
+                  <td className={`${sizeClasses.cellPadding} text-right font-bold bg-gradient-to-l from-orange-500/15 to-transparent`}>
+                    {formatGrowthRate(channel.growthData.dailyGrowth)}
                   </td>
                   
                   <td className={`${sizeClasses.cellPadding} text-right text-gray-200 font-medium`}>
