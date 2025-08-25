@@ -1,24 +1,34 @@
 import { useState } from 'react';
-import { AdvancedChannelData, ChannelSortField, SortOrder, SearchType } from '@/lib/types';
+import { AdvancedChannelData, ChannelSortField, SortOrder, SearchType, ChannelGrade } from '@/lib/types';
 import { enhanceChannelData } from '@/lib/channelUtils';
 import AdvancedChannelTable from './AdvancedChannelTable';
 import AdvancedChannelFilters from './AdvancedChannelFilters';
 import LoadingSkeleton from './LoadingSkeleton';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
-import { AlertCircle, TrendingUp, RefreshCw } from 'lucide-react';
+import { AlertCircle, TrendingUp, RefreshCw, Filter, SlidersHorizontal } from 'lucide-react';
 
 interface AdvancedChannelAnalysisProps {
   apiKey: string;
-  onSearchChannelVideos?: (channelTitle: string) => void;
+  channels: AdvancedChannelData[];
+  loading: boolean;
+  searchQuery: string;
+  setChannels: (channels: AdvancedChannelData[]) => void;
+  setLoading: (loading: boolean) => void;
+  setSearchQuery: (query: string) => void;
+  onSearchChannelVideos?: (channelId: string, channelTitle: string) => void;
 }
 
-export default function AdvancedChannelAnalysis({ apiKey, onSearchChannelVideos }: AdvancedChannelAnalysisProps) {
-  const [channels, setChannels] = useState<AdvancedChannelData[]>([]);
-  const [loading, setLoading] = useState(false);
+export default function AdvancedChannelAnalysis({ 
+  apiKey, 
+  channels, 
+  loading, 
+  searchQuery, 
+  setChannels, 
+  setLoading, 
+  setSearchQuery, 
+  onSearchChannelVideos 
+}: AdvancedChannelAnalysisProps) {
   const { error, handleApiError, handleNetworkError, clearError, retry } = useErrorHandler();
-  
-  // 검색 관련 상태
-  const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<SearchType>('channel');
   
   // 필터 관련 상태
@@ -35,6 +45,11 @@ export default function AdvancedChannelAnalysis({ apiKey, onSearchChannelVideos 
   const [currentPage, setCurrentPage] = useState(1);
   const [nextPageToken, setNextPageToken] = useState<string | undefined>(undefined);
   const [totalResults, setTotalResults] = useState(0);
+
+  // 새로운 필터 상태들
+  const [gradeFilter, setGradeFilter] = useState<ChannelGrade[]>([]);
+  const [tableSize, setTableSize] = useState<'compact' | 'normal' | 'spacious'>('normal');
+  const [maxChannelsPerPage, setMaxChannelsPerPage] = useState(50);
 
   const handleSearch = async (pageToken?: string) => {
     if (!searchQuery.trim()) {
@@ -114,8 +129,32 @@ export default function AdvancedChannelAnalysis({ apiKey, onSearchChannelVideos 
     }
   };
 
+  // 채널 필터링
+  const filteredChannels = channels.filter(channel => {
+    // 등급 필터
+    if (gradeFilter.length > 0 && !gradeFilter.includes(channel.grade)) {
+      return false;
+    }
+    
+    // 국가 필터
+    if (countryFilter && channel.country !== countryFilter) {
+      return false;
+    }
+    
+    // 구독자 수 필터
+    if (minSubscribers && channel.subscriberCount < parseInt(minSubscribers)) {
+      return false;
+    }
+    
+    if (maxSubscribers && channel.subscriberCount > parseInt(maxSubscribers)) {
+      return false;
+    }
+    
+    return true;
+  });
+
   // 채널 정렬
-  const sortedChannels = [...channels].sort((a, b) => {
+  const sortedChannels = [...filteredChannels].sort((a, b) => {
     let aValue: any, bValue: any;
 
     switch (sortField) {
@@ -160,16 +199,22 @@ export default function AdvancedChannelAnalysis({ apiKey, onSearchChannelVideos 
     }
   });
 
-  const getStats = () => {
-    if (channels.length === 0) return null;
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(sortedChannels.length / maxChannelsPerPage);
+  const startIndex = (currentPage - 1) * maxChannelsPerPage;
+  const endIndex = startIndex + maxChannelsPerPage;
+  const paginatedChannels = sortedChannels.slice(startIndex, endIndex);
 
-    const totalSubscribers = channels.reduce((sum, ch) => sum + ch.subscriberCount, 0);
-    const avgSubscribers = Math.round(totalSubscribers / channels.length);
-    const topGrades = channels.filter(ch => ['S', 'A'].includes(ch.grade)).length;
-    const koreanChannels = channels.filter(ch => ch.isKoreanChannel).length;
+  const getStats = () => {
+    if (filteredChannels.length === 0) return null;
+
+    const totalSubscribers = filteredChannels.reduce((sum, ch) => sum + ch.subscriberCount, 0);
+    const avgSubscribers = Math.round(totalSubscribers / filteredChannels.length);
+    const topGrades = filteredChannels.filter(ch => ['S', 'A'].includes(ch.grade)).length;
+    const koreanChannels = filteredChannels.filter(ch => ch.isKoreanChannel).length;
 
     return {
-      totalChannels: channels.length,
+      totalChannels: filteredChannels.length,
       avgSubscribers,
       topGrades,
       koreanChannels
@@ -233,6 +278,91 @@ export default function AdvancedChannelAnalysis({ apiKey, onSearchChannelVideos 
         </div>
       )}
 
+      {/* 추가 필터 및 컨트롤 */}
+      {channels.length > 0 && (
+        <div className="neo-glass cyber-border rounded-xl p-4">
+          <div className="flex flex-wrap gap-4 items-center justify-between">
+            {/* 등급 필터 */}
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-cyan-400" />
+              <span className="text-sm font-medium text-gray-300">등급 필터:</span>
+              <div className="flex gap-2">
+                {(['S', 'A', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D'] as ChannelGrade[]).map(grade => (
+                  <button
+                    key={grade}
+                    onClick={() => {
+                      setGradeFilter(prev => 
+                        prev.includes(grade) 
+                          ? prev.filter(g => g !== grade)
+                          : [...prev, grade]
+                      );
+                    }}
+                    className={`px-2 py-1 rounded-lg text-xs font-bold transition-all duration-200 ${
+                      gradeFilter.includes(grade)
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                    title={`${grade}등급: ${
+                      grade === 'S' ? '1천만+ 구독자' :
+                      grade === 'A' ? '500만+ 구독자' :
+                      grade === 'B+' ? '100만+ 구독자' :
+                      grade === 'B' ? '50만+ 구독자' :
+                      grade === 'B-' ? '10만+ 구독자' :
+                      grade === 'C+' ? '5만+ 구독자' :
+                      grade === 'C' ? '1만+ 구독자' :
+                      grade === 'C-' ? '5천+ 구독자' :
+                      grade === 'D+' ? '1천+ 구독자' :
+                      '1천 미만 구독자'
+                    }`}
+                  >
+                    {grade}
+                  </button>
+                ))}
+              </div>
+              {gradeFilter.length > 0 && (
+                <button
+                  onClick={() => setGradeFilter([])}
+                  className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg transition-colors"
+                >
+                  초기화
+                </button>
+              )}
+            </div>
+            
+            {/* 테이블 크기 조절 */}
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
+              <span className="text-sm font-medium text-gray-300">행 크기:</span>
+              <select
+                value={tableSize}
+                onChange={(e) => setTableSize(e.target.value as any)}
+                className="bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1 text-sm font-medium focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+              >
+                <option value="compact">좁음</option>
+                <option value="normal">보통</option>
+                <option value="spacious">넓음</option>
+              </select>
+            </div>
+            
+            {/* 페이지당 결과 수 */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-300">페이지당:</span>
+              <select
+                value={maxChannelsPerPage}
+                onChange={(e) => setMaxChannelsPerPage(parseInt(e.target.value))}
+                className="bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1 text-sm font-medium focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+              >
+                <option value="25">25개</option>
+                <option value="50">50개</option>
+                <option value="100">100개</option>
+                <option value="200">200개</option>
+                <option value="300">300개</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 에러 메시지 */}
       {error && (
         <div className="neo-glass bg-red-900/20 border-red-500/30 text-red-200 px-4 py-3 rounded-xl">
@@ -267,14 +397,63 @@ export default function AdvancedChannelAnalysis({ apiKey, onSearchChannelVideos 
       {loading ? (
         <LoadingSkeleton type="analysis" />
       ) : (
-        <AdvancedChannelTable
-          channels={sortedChannels}
-          sortField={sortField}
-          sortOrder={sortOrder}
-          onSort={handleSort}
-          onSearchChannelVideos={onSearchChannelVideos}
-          loading={loading}
-        />
+        <>
+          <AdvancedChannelTable
+            channels={paginatedChannels}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            onSearchChannelVideos={onSearchChannelVideos}
+            loading={loading}
+            tableSize={tableSize}
+          />
+          
+          {/* 페이지네이션 */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 mt-6">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-50 text-white rounded-lg transition-colors font-medium"
+                >
+                  이전
+                </button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-2 rounded-lg font-medium transition-all ${
+                          currentPage === pageNum
+                            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
+                            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-50 text-white rounded-lg transition-colors font-medium"
+                >
+                  다음
+                </button>
+              </div>
+              
+              <div className="text-sm text-gray-400">
+                {startIndex + 1}-{Math.min(endIndex, sortedChannels.length)} / {sortedChannels.length}개
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* 안내 메시지 */}

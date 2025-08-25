@@ -24,20 +24,12 @@ export default function SearchSection({ activeTab, currentSearchQuery, setCurren
               <p className="text-base sm:text-lg lg:text-xl text-gray-300 font-bold px-4 sm:px-0">AI 기반 성과 분석으로 숨겨진 보석같은 영상을 발굴하세요</p>
             </>
           )}
-          {activeTab === 'channels' && (
+          {activeTab === 'channel-analysis' && (
             <>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-transparent bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text mb-2 sm:mb-3">
-                성장 가능성 채널 찾기 🚀
+                채널 전체 분석 🚀
               </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-300 font-bold px-4 sm:px-0">데이터 분석으로 성장 잠능이 높은 채널을 발굴하세요</p>
-            </>
-          )}
-          {activeTab === 'analysis' && (
-            <>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text-secondary mb-2 sm:mb-3">
-                채널 상세 분석 📊
-              </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-300 font-bold px-4 sm:px-0">채널의 성과와 트렌드를 상세하게 분석합니다</p>
+              <p className="text-base sm:text-lg lg:text-xl text-gray-300 font-bold px-4 sm:px-0">데이터 분석으로 성장 가능성이 높은 채널을 발굴하세요</p>
             </>
           )}
           {activeTab === 'favorites' && (
@@ -61,15 +53,12 @@ export default function SearchSection({ activeTab, currentSearchQuery, setCurren
                   placeholder={
                     activeTab === 'videos' 
                       ? "어떤 영상을 찾고 계신가요? ✨"
-                      : activeTab === 'channels'
-                      ? "어떤 채널을 찾고 계신가요? 🚀"
-                      : "채널을 선택해주세요"
+                      : "어떤 채널을 찾고 계신가요? 🚀"
                   }
                   value={currentSearchQuery}
                   onChange={(e) => setCurrentSearchQuery(e.target.value)}
                   className="flex-1 px-3 sm:px-4 py-4 sm:py-5 text-base sm:text-lg bg-transparent focus:outline-none text-white placeholder-gray-400 font-bold"
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  disabled={activeTab === 'analysis'}
                 />
               </div>
               <button

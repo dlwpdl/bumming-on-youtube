@@ -317,6 +317,18 @@ button, input, select, textarea {
     translateZ(20px);
 }
 
+/* Custom Select and Form Elements */
+select, option {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 500;
+  font-size: inherit;
+  letter-spacing: -0.025em;
+}
+
+select::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
 /* Custom Slider Styles */
 .slider {
   -webkit-appearance: none;

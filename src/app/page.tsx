@@ -43,6 +43,11 @@ export default function Home() {
   const [favoriteVideos, setFavoriteVideos] = useState<FavoriteVideo[]>([]);
   const [favoriteChannels, setFavoriteChannels] = useState<FavoriteChannel[]>([]);
   const [loadingChannelAnalysis, setLoadingChannelAnalysis] = useState(false);
+  
+  // 채널 분석 전용 상태 (탭 전환 시에도 유지)
+  const [channelAnalysisResults, setChannelAnalysisResults] = useState<any[]>([]);
+  const [channelAnalysisLoading, setChannelAnalysisLoading] = useState(false);
+  const [channelAnalysisQuery, setChannelAnalysisQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [error, setError] = useState('');
@@ -78,8 +83,8 @@ export default function Home() {
   const [viewSize, setViewSize] = useState<ViewSize>('medium');
   const [cardScale, setCardScale] = useState(1.0);
 
-  const currentSearchQuery = activeTab === 'channels' ? channelSearchQuery : videoSearchQuery;
-  const setCurrentSearchQuery = activeTab === 'channels' ? setChannelSearchQuery : setVideoSearchQuery;
+  const currentSearchQuery = activeTab === 'channel-analysis' ? channelSearchQuery : videoSearchQuery;
+  const setCurrentSearchQuery = activeTab === 'channel-analysis' ? setChannelSearchQuery : setVideoSearchQuery;
 
   useEffect(() => {
     const savedApiKey = apiKeyStorage.load();
@@ -364,10 +369,6 @@ export default function Home() {
       return;
     }
     
-    if (activeTab === 'analysis') {
-      setError('채널을 먼저 선택해주세요.');
-      return;
-    }
     
     const isFirstSearch = !pageToken;
     
@@ -375,8 +376,6 @@ export default function Home() {
       setLoading(true);
       if (activeTab === 'videos') {
         setVideos([]);
-      } else if (activeTab === 'channels') {
-        setChannels([]);
       }
       setCurrentPage(1);
       setNextPageToken(undefined);
@@ -422,8 +421,6 @@ export default function Home() {
           
           if (activeTab === 'videos') {
             setVideos(cachedData.videos || []);
-          } else if (activeTab === 'channels') {
-            setChannels(cachedData.channels || []);
           }
           
           setNextPageToken(cachedData.nextPageToken);
@@ -464,8 +461,6 @@ export default function Home() {
       if (response.ok) {
         if (activeTab === 'videos') {
           setVideos(data.videos || []);
-        } else if (activeTab === 'channels') {
-          setChannels(data.channels || []);
         }
         
         setNextPageToken(data.nextPageToken);
@@ -800,26 +795,40 @@ export default function Home() {
               <EmptyState />
             )}
 
-            {activeTab === 'analysis' && (
-              <ChannelAnalysis 
-                selectedChannelData={selectedChannelData} 
-                channelVideos={sortedChannelVideos} 
-                loadingChannelAnalysis={loadingChannelAnalysis} 
-                {...videoCardProps}
-              />
-            )}
 
             {activeTab === 'channel-analysis' && (
               <AdvancedChannelAnalysis 
-                apiKey={apiKey} 
-                onSearchChannelVideos={(channelTitle) => {
-                  setVideoSearchQuery(channelTitle);
-                  setActiveTab('videos');
-                  
-                  // 잠시 후 검색 실행
-                  setTimeout(() => {
-                    handleSearch();
-                  }, 100);
+                apiKey={apiKey}
+                channels={channelAnalysisResults}
+                loading={channelAnalysisLoading}
+                searchQuery={channelAnalysisQuery}
+                setChannels={setChannelAnalysisResults}
+                setLoading={setChannelAnalysisLoading}
+                setSearchQuery={setChannelAnalysisQuery}
+                onSearchChannelVideos={async (channelId, channelTitle) => {
+                  try {
+                    setLoading(true);
+                    setVideos([]);
+                    setActiveTab('videos');
+                    
+                    // 채널의 영상들을 직접 가져오기
+                    const response = await fetch(`/api/channel-videos?channelId=${channelId}&apiKey=${apiKey}&maxResults=50`);
+                    if (response.ok) {
+                      const data = await response.json();
+                      setVideos(data.videos || []);
+                      setVideoSearchQuery(`${channelTitle} 채널 영상`);
+                      setCurrentPage(1);
+                      setNextPageToken(data.nextPageToken);
+                      setPrevPageTokens([]);
+                      setTotalResults(data.totalResults || data.videos?.length || 0);
+                    } else {
+                      setError('채널 영상을 불러오는데 실패했습니다.');
+                    }
+                  } catch (error) {
+                    setError('채널 영상을 불러오는 중 오류가 발생했습니다.');
+                  } finally {
+                    setLoading(false);
+                  }
                 }}
               />
             )}
