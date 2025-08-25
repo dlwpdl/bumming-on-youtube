@@ -40,6 +40,28 @@ export default function AdvancedChannelFilters({
     }
   };
 
+  // 숫자에 콤마 추가 함수
+  const formatNumber = (value: string) => {
+    const number = value.replace(/,/g, '');
+    if (!number || isNaN(Number(number))) return value;
+    return Number(number).toLocaleString();
+  };
+
+  // 콤마 제거 함수 (저장용)
+  const unformatNumber = (value: string) => {
+    return value.replace(/,/g, '');
+  };
+
+  const handleMinSubscribersChange = (value: string) => {
+    const unformatted = unformatNumber(value);
+    setMinSubscribers(unformatted);
+  };
+
+  const handleMaxSubscribersChange = (value: string) => {
+    const unformatted = unformatNumber(value);
+    setMaxSubscribers(unformatted);
+  };
+
   const countries = [
     { code: '', name: '모든 국가', flag: '🌍' },
     { code: 'KR', name: '대한민국', flag: '🇰🇷' },
@@ -164,10 +186,10 @@ export default function AdvancedChannelFilters({
               최소 구독자
             </label>
             <input
-              type="number"
-              value={minSubscribers}
-              onChange={(e) => setMinSubscribers(e.target.value)}
-              placeholder="1000"
+              type="text"
+              value={formatNumber(minSubscribers)}
+              onChange={(e) => handleMinSubscribersChange(e.target.value)}
+              placeholder="1,000"
               className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent text-white text-sm"
             />
           </div>
@@ -178,10 +200,10 @@ export default function AdvancedChannelFilters({
               최대 구독자
             </label>
             <input
-              type="number"
-              value={maxSubscribers}
-              onChange={(e) => setMaxSubscribers(e.target.value)}
-              placeholder="1000000"
+              type="text"
+              value={formatNumber(maxSubscribers)}
+              onChange={(e) => handleMaxSubscribersChange(e.target.value)}
+              placeholder="1,000,000"
               className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent text-white text-sm"
             />
           </div>

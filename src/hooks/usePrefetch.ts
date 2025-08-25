@@ -126,15 +126,15 @@ export function usePrefetch() {
     requestInit?: RequestInit,
     options?: PrefetchOptions
   ) => {
-    const observerRef = useRef<IntersectionObserver>();
+    let observer: IntersectionObserver | undefined;
 
     const observe = (element: Element) => {
       if (!element) return;
 
       // 이미 관찰 중이면 스킵
-      if (observerRef.current) return;
+      if (observer) return;
 
-      observerRef.current = new IntersectionObserver(
+      observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
@@ -145,7 +145,7 @@ export function usePrefetch() {
               });
               
               // 한 번 프리페치하면 관찰 중단
-              observerRef.current?.disconnect();
+              observer?.disconnect();
             }
           });
         },
@@ -155,11 +155,11 @@ export function usePrefetch() {
         }
       );
 
-      observerRef.current.observe(element);
+      observer.observe(element);
     };
 
     const disconnect = () => {
-      observerRef.current?.disconnect();
+      observer?.disconnect();
     };
 
     return { observe, disconnect };

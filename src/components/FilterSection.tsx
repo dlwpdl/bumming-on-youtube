@@ -1,7 +1,6 @@
 
 import { Filter, ChevronDown } from 'lucide-react';
-
-type TabType = 'videos' | 'channels' | 'analysis' | 'favorites';
+import { TabType } from '@/lib/types';
 
 interface FilterSectionProps {
   activeTab: TabType;
@@ -117,7 +116,7 @@ export default function FilterSection({ activeTab, filters, setFilters }: Filter
           </>
         )}
         
-        {activeTab === 'channels' && (
+        {activeTab === 'channel-analysis' && (
           <>
             <div className="space-y-2">
               <label className="block text-xs sm:text-sm font-semibold text-gray-300">최소 구독자수</label>

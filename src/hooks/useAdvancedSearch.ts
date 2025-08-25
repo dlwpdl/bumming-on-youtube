@@ -206,9 +206,9 @@ export function useAdvancedSearch() {
     return params;
   }, [filters, buildSearchQuery]);
 
-  const filterResults = useCallback((
-    results: VideoData[] | ChannelData[]
-  ): VideoData[] | ChannelData[] => {
+  const filterResults = useCallback(<T extends VideoData | ChannelData>(
+    results: T[]
+  ): T[] => {
     return results.filter(item => {
       // 조회수 필터 (영상만)
       if ('viewCount' in item) {

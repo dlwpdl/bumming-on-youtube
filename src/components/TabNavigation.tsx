@@ -1,7 +1,6 @@
 
 import { Video, UserCheck, BarChart3, Heart, TrendingUp } from 'lucide-react';
-
-type TabType = 'videos' | 'analysis' | 'channel-analysis' | 'favorites';
+import { TabType } from '@/lib/types';
 
 interface TabNavigationProps {
   activeTab: TabType;
@@ -30,23 +29,6 @@ export default function TabNavigation({ activeTab, setActiveTab, selectedChannel
                 activeTab === 'videos' ? 'animate-pulse' : 'group-hover:rotate-12'
               }`} />
               영상 찾기
-            </button>
-            <button
-              onClick={() => setActiveTab('analysis')}
-              className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-4 sm:py-5 rounded-2xl font-black text-xs sm:text-sm transition-all duration-500 group card-3d ${
-                activeTab === 'analysis'
-                  ? 'bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-[0_8px_25px_rgba(139,92,246,0.4)] transform scale-[1.02]'
-                  : selectedChannelId
-                    ? 'text-gray-300 hover:text-white hover:bg-gray-600/30 hover:scale-[1.01]'
-                    : 'text-gray-500 cursor-not-allowed opacity-50'
-              }`}
-              disabled={!selectedChannelId}
-            >
-              <BarChart3 className={`w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 ${
-                activeTab === 'analysis' ? 'animate-pulse' : selectedChannelId ? 'group-hover:rotate-12' : ''
-              }`} />
-              <span className="hidden sm:inline">채널 분석</span>
-              <span className="sm:hidden">분석</span>
             </button>
             <button
               onClick={() => setActiveTab('channel-analysis')}
