@@ -1,7 +1,6 @@
 
 import { Filter, ChevronDown } from 'lucide-react';
-
-type TabType = 'videos' | 'channels' | 'analysis' | 'favorites';
+import { TabType } from '@/lib/types';
 
 interface FilterSectionProps {
   activeTab: TabType;

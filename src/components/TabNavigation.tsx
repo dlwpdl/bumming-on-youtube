@@ -1,7 +1,6 @@
 
 import { Video, UserCheck, BarChart3, Heart, TrendingUp } from 'lucide-react';
-
-type TabType = 'videos' | 'analysis' | 'channel-analysis' | 'favorites';
+import { TabType } from '@/lib/types';
 
 interface TabNavigationProps {
   activeTab: TabType;

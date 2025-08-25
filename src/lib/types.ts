@@ -4,7 +4,7 @@ import { VideoData } from './youtube';
 export type SortField = 'performanceScore' | 'viewCount' | 'subscriberCount' | 'title' | 'publishedAt';
 export type ChannelSortField = 'grade' | 'subscriberCount' | 'viewCount' | 'videoCount' | 'title' | 'publishedAt' | 'growthRate';
 export type SortOrder = 'asc' | 'desc';
-export type TabType = 'videos' | 'analysis' | 'channel-analysis' | 'favorites';
+export type TabType = 'videos' | 'channels' | 'analysis' | 'channel-analysis' | 'favorites';
 
 export type ChannelGrade = 'S' | 'A' | 'B+' | 'B' | 'B-' | 'C+' | 'C' | 'C-' | 'D+' | 'D';
 
