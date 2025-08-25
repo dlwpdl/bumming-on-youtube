@@ -2,7 +2,7 @@
 import { VideoData } from './youtube';
 
 export type SortField = 'performanceScore' | 'viewCount' | 'subscriberCount' | 'title' | 'publishedAt';
-export type ChannelSortField = 'grade' | 'subscriberCount' | 'viewCount' | 'videoCount' | 'title' | 'publishedAt' | 'growthRate';
+export type ChannelSortField = 'grade' | 'subscriberCount' | 'viewCount' | 'videoCount' | 'title' | 'publishedAt' | 'growthRate' | 'category' | 'averageViews' | 'yearlyGrowth' | 'monthlyGrowth' | 'dailyGrowth' | 'subscribersPerVideo' | 'operatingYears' | 'uploadFrequency' | 'country';
 export type SortOrder = 'asc' | 'desc';
 export type TabType = 'videos' | 'channel-analysis' | 'favorites';
 

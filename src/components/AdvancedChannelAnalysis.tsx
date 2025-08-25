@@ -51,6 +51,9 @@ export default function AdvancedChannelAnalysis({
   const [tableSize, setTableSize] = useState<'compact' | 'normal' | 'spacious'>('compact');
   const [maxChannelsPerPage, setMaxChannelsPerPage] = useState(50);
   const [totalFetchedChannels, setTotalFetchedChannels] = useState(0);
+  
+  // 캐싱을 위한 상태
+  const [cachedSearchResults, setCachedSearchResults] = useState<Map<string, { channels: AdvancedChannelData[], nextPageToken?: string, timestamp: number }>>(new Map());
 
   const handleSearch = async (pageToken?: string) => {
     if (!searchQuery.trim()) {
@@ -65,57 +68,135 @@ export default function AdvancedChannelAnalysis({
 
     const isFirstSearch = !pageToken;
     
+    // 캐시 키 생성 (검색 쿼리와 필터 조합)
+    const cacheKey = `${searchQuery.trim()}_${countryFilter}_${minSubscribers}_${maxSubscribers}_${pageToken || 'first'}`;
+    const CACHE_DURATION = 5 * 60 * 1000; // 5분간 캐시 유지
+    
+    // 캐시된 결과가 있고 유효한지 확인
+    if (isFirstSearch) {
+      const cached = cachedSearchResults.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+        console.log('캐시된 결과 사용:', cached.channels.length, '개 채널');
+        setLoading(false);
+        setChannels(cached.channels);
+        setTotalFetchedChannels(cached.channels.length);
+        setNextPageToken(cached.nextPageToken);
+        setTotalResults(cached.channels.length);
+        setCurrentPage(1);
+        return;
+      }
+    }
+    
     if (isFirstSearch) {
       setLoading(true);
       setChannels([]);
       setCurrentPage(1);
       setNextPageToken(undefined);
       setTotalResults(0);
+      setTotalFetchedChannels(0);
     }
     
     clearError();
 
     try {
-      // 임시로 기존 채널 검색 API 사용 (실제로는 advanced-channel-search API를 만들어야 함)
-      const response = await fetch('/api/search-channels', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: searchQuery,
-          country: countryFilter,
-          minSubscribers,
-          maxSubscribers,
-          maxResults: '50',
-          pageToken,
-          apiKey,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // 채널 데이터를 고급 채널 데이터로 변환
-        const enhancedChannels = (data.channels || []).map((channel: any) => {
-          return enhanceChannelData(channel);
-        });
+      if (isFirstSearch) {
+        // 대용량 검색: 처음 검색 시 여러 배치를 순차적으로 가져와서 더 많은 데이터를 확보
+        console.log('대용량 채널 검색 시작...');
+        const batchSize = 50;
+        const maxInitialBatches = 200; // 처음에 최대 10,000개 데이터를 가져와서 대용량 채널 검색 지원 (50 * 200 = 10,000개)
+        const allChannels: any[] = [];
+        let currentToken: string | undefined = undefined;
         
-        if (isFirstSearch) {
-          setChannels(enhancedChannels);
-          setTotalFetchedChannels(enhancedChannels.length);
-        } else {
-          setChannels(prev => [...prev, ...enhancedChannels]);
-          setTotalFetchedChannels(prev => prev + enhancedChannels.length);
-        }
-        setNextPageToken(data.nextPageToken);
-        setTotalResults(data.totalResults || 0);
+        for (let i = 0; i < maxInitialBatches; i++) {
+          try {
+            const response = await fetch('/api/search-channels', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: searchQuery,
+                country: countryFilter,
+                minSubscribers,
+                maxSubscribers,
+                maxResults: batchSize.toString(),
+                pageToken: currentToken,
+                apiKey,
+              }),
+            });
 
-        if (enhancedChannels.length === 0) {
-          handleApiError({ status: 404 } as Response, { error: '검색 조건에 맞는 채널이 없습니다. 다른 키워드나 필터를 시도해보세요.' });
+            const data = await response.json();
+            
+            if (response.ok && data.channels?.length > 0) {
+              const enhancedChannels = data.channels.map((channel: any) => enhanceChannelData(channel));
+              allChannels.push(...enhancedChannels);
+              currentToken = data.nextPageToken;
+              
+              console.log(`배치 ${i + 1} 완료: ${enhancedChannels.length}개 채널 추가 (총 ${allChannels.length}개)`);
+              
+              if (!currentToken) break; // 더 이상 데이터가 없으면 종료
+            } else {
+              console.log(`배치 ${i + 1}: 데이터 없음 또는 오류`);
+              break;
+            }
+            
+            // API 호출 간격 조정 (rate limiting 방지) - 대용량 검색을 위해 간격을 더 짧게
+            if (i < maxInitialBatches - 1) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          } catch (batchError) {
+            console.error(`배치 ${i + 1} 오류:`, batchError);
+            break;
+          }
+        }
+        
+        if (allChannels.length > 0) {
+          setChannels(allChannels);
+          setTotalFetchedChannels(allChannels.length);
+          setNextPageToken(currentToken);
+          setTotalResults(allChannels.length); 
+          console.log(`초기 대용량 검색 완료: ${allChannels.length}개 채널 로드 (목표: ${maxInitialBatches * batchSize}개)`);
+          
+          // 결과를 캐시에 저장
+          const newCached = new Map(cachedSearchResults);
+          newCached.set(cacheKey, {
+            channels: allChannels,
+            nextPageToken: currentToken,
+            timestamp: Date.now()
+          });
+          setCachedSearchResults(newCached);
+          console.log(`검색 결과를 캐시에 저장: ${allChannels.length}개 채널`);
+        } else {
+          handleApiError({ status: 404 } as Response, { error: '검색 결과가 없습니다.' });
         }
       } else {
-        handleApiError(response, data);
+        // 추가 페이지 로딩
+        const response = await fetch('/api/search-channels', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: searchQuery,
+            country: countryFilter,
+            minSubscribers,
+            maxSubscribers,
+            maxResults: '50',
+            pageToken,
+            apiKey,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.channels?.length > 0) {
+          const enhancedChannels = data.channels.map((channel: any) => enhanceChannelData(channel));
+          setChannels(prev => [...prev, ...enhancedChannels]);
+          setTotalFetchedChannels(prev => prev + enhancedChannels.length);
+          setNextPageToken(data.nextPageToken);
+        } else {
+          handleApiError(response, data);
+        }
       }
     } catch (error) {
       console.error('채널 검색 오류:', error);
@@ -130,20 +211,31 @@ export default function AdvancedChannelAnalysis({
   // 페이지 크기 변경 시 추가 데이터 로드
   const handlePageSizeChange = async (newSize: number) => {
     const currentSize = channels.length;
-    if (newSize > currentSize && nextPageToken) {
+    console.log(`페이지 크기 변경: ${currentSize} -> ${newSize}`);
+    console.log(`검색쿼리: "${searchQuery}", nextToken: ${nextPageToken}`);
+    console.log(`필터 - 국가: "${countryFilter}", 최소구독자: "${minSubscribers}", 최대구독자: "${maxSubscribers}"`);
+    
+    // 검색이 이루어진 상태이고, 더 많은 데이터가 필요하고, 더 가져올 데이터가 있는 경우
+    if (searchQuery.trim() && newSize > currentSize && nextPageToken) {
+      console.log(`추가 데이터 로드 시작: ${newSize - currentSize}개 더 필요`);
+      
       const needMoreChannels = newSize - currentSize;
       const additionalBatches = Math.ceil(needMoreChannels / 50);
       
+      setLoading(true);
       let currentToken = nextPageToken;
+      
       for (let i = 0; i < additionalBatches && currentToken; i++) {
         try {
+          console.log(`배치 ${i + 1}/${additionalBatches} 로딩 중... (토큰: ${currentToken.substring(0, 20)}...)`);
+          
           const response = await fetch('/api/search-channels', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              query: searchQuery,
+              query: searchQuery.trim(),
               country: countryFilter,
               minSubscribers,
               maxSubscribers,
@@ -154,23 +246,57 @@ export default function AdvancedChannelAnalysis({
           });
 
           const data = await response.json();
+          console.log(`배치 ${i + 1} 응답:`, response.ok, data.channels?.length, '개 채널');
+          
           if (response.ok && data.channels?.length > 0) {
             const enhancedChannels = data.channels.map((channel: any) => enhanceChannelData(channel));
-            setChannels(prev => [...prev, ...enhancedChannels]);
+            setChannels(prev => {
+              console.log(`채널 추가: ${prev.length} + ${enhancedChannels.length} = ${prev.length + enhancedChannels.length}`);
+              return [...prev, ...enhancedChannels];
+            });
             setTotalFetchedChannels(prev => prev + enhancedChannels.length);
             currentToken = data.nextPageToken;
+            
+            // API 호출 간격 조정 (rate limiting 방지)
+            if (i < additionalBatches - 1 && currentToken) {
+              await new Promise(resolve => setTimeout(resolve, 200));
+            }
           } else {
+            console.log(`배치 ${i + 1} 완료: 더 이상 데이터 없음`);
             break;
           }
         } catch (error) {
-          console.error('Error fetching additional channels:', error);
+          console.error(`배치 ${i + 1} 오류:`, error);
           break;
         }
       }
+      
       setNextPageToken(currentToken);
+      setLoading(false);
+      console.log(`페이지 크기 변경 완료: 현재 ${channels.length + (newSize - currentSize)}개 채널`);
+    } else {
+      console.log('추가 데이터 로드 조건 미충족:', {
+        hasSearchQuery: !!searchQuery.trim(),
+        needsMoreData: newSize > currentSize,
+        hasNextToken: !!nextPageToken
+      });
     }
+    
     setMaxChannelsPerPage(newSize);
     setCurrentPage(1);
+  };
+
+  // 다음 페이지 로드
+  const handleNextPage = async () => {
+    if (!nextPageToken || loading) return;
+    
+    setLoading(true);
+    try {
+      await handleSearch(nextPageToken);
+      setCurrentPage(prev => prev + 1);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSort = (field: ChannelSortField) => {
@@ -394,7 +520,11 @@ export default function AdvancedChannelAnalysis({
                 <option value="50">50개</option>
                 <option value="100">100개</option>
                 <option value="200">200개</option>
-                <option value="300">300개</option>
+                <option value="500">500개</option>
+                <option value="1000">1,000개</option>
+                <option value="2000">2,000개</option>
+                <option value="5000">5,000개</option>
+                <option value="10000">10,000개</option>
               </select>
             </div>
             

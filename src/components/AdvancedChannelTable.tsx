@@ -28,6 +28,7 @@ export default function AdvancedChannelTable({
   loading = false,
   tableSize = 'normal'
 }: AdvancedChannelTableProps) {
+  const [hoveredChannel, setHoveredChannel] = useState<string | null>(null);
   const getSortIcon = (field: ChannelSortField) => {
     if (sortField !== field) return null;
     return sortOrder === 'desc' ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />;
@@ -133,7 +134,14 @@ export default function AdvancedChannelTable({
                 </div>
               </th>
               
-              <th className={`${sizeClasses.headerPadding} text-left font-bold text-cyan-200 w-20`}>주제</th>
+              <th 
+                className={`${sizeClasses.headerPadding} text-left font-bold text-cyan-200 cursor-pointer hover:bg-cyan-400/10 w-20 transition-all duration-200`}
+                onClick={() => onSort('category')}
+              >
+                <div className="flex items-center gap-2">
+                  주제 {getSortIcon('category')}
+                </div>
+              </th>
               
               <th 
                 className={`${sizeClasses.headerPadding} text-right font-bold text-cyan-200 cursor-pointer hover:bg-cyan-400/10 w-32 transition-all duration-200`}
@@ -153,19 +161,29 @@ export default function AdvancedChannelTable({
                 </div>
               </th>
               
-              <th className={`${sizeClasses.headerPadding} text-right font-bold text-orange-200 bg-gradient-to-b from-orange-500/20 to-orange-600/20 w-28`}>
-                연간증가
+              <th 
+                className={`${sizeClasses.headerPadding} text-right font-bold text-orange-200 bg-gradient-to-b from-orange-500/20 to-orange-600/20 cursor-pointer hover:bg-orange-400/10 w-28 transition-all duration-200`}
+                onClick={() => onSort('yearlyGrowth')}
+              >
+                <div className="flex items-center justify-end gap-2">
+                  연간증가 {getSortIcon('yearlyGrowth')}
+                </div>
               </th>
               
-              <th className={`${sizeClasses.headerPadding} text-right font-bold text-orange-200 bg-gradient-to-b from-orange-500/20 to-orange-600/20 w-24`}>
-                월간증가
+              <th 
+                className={`${sizeClasses.headerPadding} text-right font-bold text-orange-200 bg-gradient-to-b from-orange-500/20 to-orange-600/20 cursor-pointer hover:bg-orange-400/10 w-24 transition-all duration-200`}
+                onClick={() => onSort('monthlyGrowth')}
+              >
+                <div className="flex items-center justify-end gap-2">
+                  월간증가 {getSortIcon('monthlyGrowth')}
+                </div>
               </th>
               
               <th className={`${sizeClasses.headerPadding} text-right font-bold text-orange-200 bg-gradient-to-b from-orange-500/20 to-orange-600/20 w-24`}>
                 일간증가
               </th>
               
-              <th className={`${sizeClasses.headerPadding} text-right font-bold text-cyan-200 w-28`}>
+              <th className={`${sizeClasses.headerPadding} text-right font-bold text-purple-200 bg-gradient-to-b from-purple-500/20 to-purple-600/20 w-28`}>
                 영상당증가
               </th>
               
@@ -202,7 +220,12 @@ export default function AdvancedChannelTable({
               const gradeColors = getGradeColor(channel.grade);
               
               return (
-                <tr key={channel.id} className={`hover:bg-slate-700/30 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-400/5 group ${sizeClasses.minHeight} relative`}>
+                <tr 
+                  key={channel.id} 
+                  className={`hover:bg-slate-700/30 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-400/5 group ${sizeClasses.minHeight} relative`}
+                  onMouseEnter={() => setHoveredChannel(channel.id)}
+                  onMouseLeave={() => setHoveredChannel(null)}
+                >
                   <td className={`${sizeClasses.cellPadding} text-gray-300 font-medium`}>{index + 1}</td>
                   
                   <td className={`${sizeClasses.cellPadding}`}>
@@ -252,50 +275,6 @@ export default function AdvancedChannelTable({
                         {channel.title}
                       </span>
                       <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-cyan-400 transition-colors duration-200" />
-                    </div>
-                  </td>
-                  
-                  {/* 전체 행에 대한 상세 정보 툴팁 */}
-                  <td className="absolute left-0 top-full mt-2 pointer-events-none z-50">
-                    <div className="bg-gray-800/98 border border-cyan-400/50 rounded-xl p-6 shadow-2xl min-w-[600px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 backdrop-blur-lg">
-                      <div className="grid grid-cols-2 gap-6 text-sm">
-                        {/* 왼쪽 컬럼 */}
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 font-bold text-cyan-400 text-base mb-4">
-                            <img src={channel.thumbnail} alt={channel.title} className="w-8 h-8 rounded-full" />
-                            <span className="truncate">{channel.title}</span>
-                          </div>
-                          <div className="text-gray-200">
-                            <div className="mb-2"><strong className="text-cyan-300">설명:</strong> <span className="text-gray-300">{channel.description?.slice(0, 120)}...</span></div>
-                            <div><strong className="text-cyan-300">구독자:</strong> <span className="text-white">{formatNumber(channel.subscriberCount)}명</span></div>
-                            <div><strong className="text-cyan-300">총 영상:</strong> <span className="text-white">{formatNumber(channel.videoCount)}개</span></div>
-                            <div><strong className="text-cyan-300">총 조회수:</strong> <span className="text-white">{formatNumber(channel.viewCount)}회</span></div>
-                            <div><strong className="text-cyan-300">평균 조회수:</strong> <span className="text-white">{formatNumber(channel.averageViews)}회</span></div>
-                            <div><strong className="text-cyan-300">개설일:</strong> <span className="text-white">{formatDate(channel.publishedAt)}</span></div>
-                            <div><strong className="text-cyan-300">운영 기간:</strong> <span className="text-white">{channel.growthData.operatingYears}년</span></div>
-                            <div><strong className="text-cyan-300">국가:</strong> <span className="text-white">{getCountryFlag(channel.country)} {channel.country || 'N/A'}</span></div>
-                          </div>
-                        </div>
-                        
-                        {/* 오른쪽 컬럼 - 성장 데이터 */}
-                        <div className="space-y-3">
-                          <div className="font-bold text-orange-400 text-base mb-4">📈 성장 분석</div>
-                          <div className="text-gray-200">
-                            <div><strong className="text-orange-300">연간 증가:</strong> {formatGrowthRate(channel.growthData.yearlyGrowth)}</div>
-                            <div><strong className="text-orange-300">월간 증가:</strong> {formatGrowthRate(channel.growthData.monthlyGrowth)}</div>
-                            <div><strong className="text-orange-300">일간 증가:</strong> {formatGrowthRate(channel.growthData.dailyGrowth)}</div>
-                            <div><strong className="text-purple-300">영상당 구독자:</strong> <span className="text-white">{formatNumber(channel.growthData.subscribersPerVideo)}</span></div>
-                            <div><strong className="text-purple-300">업로드 빈도:</strong> <span className="text-white">{formatUploadFrequency(channel.growthData.uploadFrequency)}</span></div>
-                            <div className="mt-3 pt-2 border-t border-gray-600">
-                              <div><strong className="text-cyan-300">등급:</strong> 
-                                <span className={`ml-2 px-2 py-1 rounded-lg text-sm font-bold ${getGradeColor(channel.grade).bg} ${getGradeColor(channel.grade).text} border ${getGradeColor(channel.grade).border}`}>
-                                  {channel.grade}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </td>
                   
@@ -367,6 +346,59 @@ export default function AdvancedChannelTable({
         )}
         </div>
       </div>
+      
+      {/* 독립적인 툴팁 */}
+      {hoveredChannel && (
+        <div className="fixed top-4 right-4 pointer-events-none z-[9999]">
+          {(() => {
+            const channel = channels.find(ch => ch.id === hoveredChannel);
+            if (!channel) return null;
+            
+            return (
+              <div className="bg-gray-800/98 border border-cyan-400/50 rounded-xl p-6 shadow-2xl min-w-[600px] backdrop-blur-lg">
+                <div className="grid grid-cols-2 gap-6 text-sm">
+                  {/* 왼쪽 컬럼 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 font-bold text-cyan-400 text-base mb-4">
+                      <img src={channel.thumbnail} alt={channel.title} className="w-8 h-8 rounded-full" />
+                      <span className="truncate">{channel.title}</span>
+                    </div>
+                    <div className="text-gray-200">
+                      <div className="mb-2"><strong className="text-cyan-300">설명:</strong> <span className="text-gray-300">{channel.description?.slice(0, 120)}...</span></div>
+                      <div><strong className="text-cyan-300">구독자:</strong> <span className="text-white">{formatNumber(channel.subscriberCount)}명</span></div>
+                      <div><strong className="text-cyan-300">총 영상:</strong> <span className="text-white">{formatNumber(channel.videoCount)}개</span></div>
+                      <div><strong className="text-cyan-300">총 조회수:</strong> <span className="text-white">{formatNumber(channel.viewCount)}회</span></div>
+                      <div><strong className="text-cyan-300">평균 조회수:</strong> <span className="text-white">{formatNumber(channel.averageViews)}회</span></div>
+                      <div><strong className="text-cyan-300">개설일:</strong> <span className="text-white">{formatDate(channel.publishedAt)}</span></div>
+                      <div><strong className="text-cyan-300">운영 기간:</strong> <span className="text-white">{channel.growthData.operatingYears}년</span></div>
+                      <div><strong className="text-cyan-300">국가:</strong> <span className="text-white">{getCountryFlag(channel.country)} {channel.country || 'N/A'}</span></div>
+                    </div>
+                  </div>
+                  
+                  {/* 오른쪽 컬럼 - 성장 데이터 */}
+                  <div className="space-y-3">
+                    <div className="font-bold text-orange-400 text-base mb-4">📈 성장 분석</div>
+                    <div className="text-gray-200">
+                      <div><strong className="text-orange-300">연간 증가:</strong> {formatGrowthRate(channel.growthData.yearlyGrowth)}</div>
+                      <div><strong className="text-orange-300">월간 증가:</strong> {formatGrowthRate(channel.growthData.monthlyGrowth)}</div>
+                      <div><strong className="text-orange-300">일간 증가:</strong> {formatGrowthRate(channel.growthData.dailyGrowth)}</div>
+                      <div><strong className="text-purple-300">영상당 구독자:</strong> <span className="text-white">{formatNumber(channel.growthData.subscribersPerVideo)}</span></div>
+                      <div><strong className="text-purple-300">업로드 빈도:</strong> <span className="text-white">{formatUploadFrequency(channel.growthData.uploadFrequency)}</span></div>
+                      <div className="mt-3 pt-2 border-t border-gray-600">
+                        <div><strong className="text-cyan-300">등급:</strong> 
+                          <span className={`ml-2 px-2 py-1 rounded-lg text-sm font-bold ${getGradeColor(channel.grade).bg} ${getGradeColor(channel.grade).text} border ${getGradeColor(channel.grade).border}`}>
+                            {channel.grade}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 }
